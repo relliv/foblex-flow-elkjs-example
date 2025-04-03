@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      2d:1.2.1:
+        specifier: link:@foblex/2d:1.2.1
+        version: link:@foblex/2d:1.2.1
       '@angular/common':
         specifier: ^19.2.0
         version: 19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2)
@@ -35,6 +38,12 @@ importers:
       '@angular/ssr':
         specifier: ^19.2.0
         version: 19.2.6(@angular/common@19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(@angular/platform-server@19.2.5(@angular/common@19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/compiler@19.2.5)(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(@angular/platform-browser@19.2.5(@angular/common@19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0)))(rxjs@7.8.2))(@angular/router@19.2.5(@angular/common@19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(@angular/platform-browser@19.2.5(@angular/common@19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0)))(rxjs@7.8.2))
+      '@foblex/2d':
+        specifier: ^1.2.1
+        version: 1.2.1(@angular/common@19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2)
+      '@foblex/flow':
+        specifier: ^17.4.3
+        version: 17.4.3(@angular/common@19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(@foblex/2d@1.2.1(@angular/common@19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@foblex/drag-toolkit@1.1.0)(@foblex/mediator@1.1.2(@angular/common@19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@foblex/platform@1.0.4(@angular/common@19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0)))(@foblex/utils@1.1.1)
       express:
         specifier: ^4.18.2
         version: 4.21.2
@@ -948,6 +957,43 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@foblex/2d@1.2.1':
+    resolution: {integrity: sha512-rEvHqJRC3B/wXL/DtVf1zJeER4vnk57fjF0LmEgGE+t/TSqyb689sAMydlcan/W7MYPM8UGnezPT9GcYbNoXeA==}
+    peerDependencies:
+      '@angular/common': '>=12.0.0'
+      '@angular/core': '>=12.0.0'
+      rxjs: '>=6.6.0'
+
+  '@foblex/drag-toolkit@1.1.0':
+    resolution: {integrity: sha512-vkI0CDUTY3pYz2dNSgca2rr4KZQTrkfPJMkj8pEhLvWZL6LlvtYdED+e4JNK9Wiqhvz0v8lmUZD5uFM6zYF0vg==}
+
+  '@foblex/flow@17.4.3':
+    resolution: {integrity: sha512-7ByKCPP7zV/Vq4pImOUgcvLt3Da+0HOfB8sDTXzfqsv6yh4wGweAC+k/6HyMQtCvG03TBcvNmr9LjBSu995LcQ==}
+    peerDependencies:
+      '@angular/common': '>=15.0.0'
+      '@angular/core': '>=15.0.0'
+      '@foblex/2d': 1.2.1
+      '@foblex/drag-toolkit': 1.1.0
+      '@foblex/mediator': 1.1.2
+      '@foblex/platform': 1.0.4
+      '@foblex/utils': 1.1.1
+
+  '@foblex/mediator@1.1.2':
+    resolution: {integrity: sha512-lDm3Si0bjRZuenCBlCPpne9eTLaueTQ+ccveUJPuz1LF4zwgKd0yRwx49Z6TWGUWNLuBMkdm+PWx5dOPEeWkNA==}
+    peerDependencies:
+      '@angular/common': '>=12.0.0'
+      '@angular/core': '>=12.0.0'
+      rxjs: '>=6.6.0'
+
+  '@foblex/platform@1.0.4':
+    resolution: {integrity: sha512-GLbqPX9xL/w2pRX51J8RSjMrZcTKb8rmi9+EcrPtpRXCa4KETY4mpIzfKlaOthZusFY++UUFecM07aXRnp+sMw==}
+    peerDependencies:
+      '@angular/common': '>=12.0.0'
+      '@angular/core': '>=12.0.0'
+
+  '@foblex/utils@1.1.1':
+    resolution: {integrity: sha512-w4g49vLAIogIXNYHWQzcv2p5jJKi/XAoTw7LvuEzKvEXDJ8ezL0BZJfbeg43q2+PyKvlUfu+6ySvNxnXYrb/Bg==}
 
   '@inquirer/checkbox@4.1.4':
     resolution: {integrity: sha512-d30576EZdApjAMceijXA5jDzRQHT/MygbC+J8I7EqA6f/FRpYxlRtRJbHF8gHeWYeSdOuTEJqonn7QLB1ELezA==}
@@ -5287,6 +5333,45 @@ snapshots:
 
   '@esbuild/win32-x64@0.25.1':
     optional: true
+
+  '@foblex/2d@1.2.1(@angular/common@19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2)':
+    dependencies:
+      '@angular/common': 19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2)
+      '@angular/core': 19.2.5(rxjs@7.8.2)(zone.js@0.15.0)
+      rxjs: 7.8.2
+      tslib: 2.8.1
+
+  '@foblex/drag-toolkit@1.1.0':
+    dependencies:
+      tslib: 2.8.1
+
+  '@foblex/flow@17.4.3(@angular/common@19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(@foblex/2d@1.2.1(@angular/common@19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@foblex/drag-toolkit@1.1.0)(@foblex/mediator@1.1.2(@angular/common@19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@foblex/platform@1.0.4(@angular/common@19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0)))(@foblex/utils@1.1.1)':
+    dependencies:
+      '@angular/common': 19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2)
+      '@angular/core': 19.2.5(rxjs@7.8.2)(zone.js@0.15.0)
+      '@foblex/2d': 1.2.1(@angular/common@19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2)
+      '@foblex/drag-toolkit': 1.1.0
+      '@foblex/mediator': 1.1.2(@angular/common@19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2)
+      '@foblex/platform': 1.0.4(@angular/common@19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))
+      '@foblex/utils': 1.1.1
+      tslib: 2.8.1
+
+  '@foblex/mediator@1.1.2(@angular/common@19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2)':
+    dependencies:
+      '@angular/common': 19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2)
+      '@angular/core': 19.2.5(rxjs@7.8.2)(zone.js@0.15.0)
+      rxjs: 7.8.2
+      tslib: 2.8.1
+
+  '@foblex/platform@1.0.4(@angular/common@19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))':
+    dependencies:
+      '@angular/common': 19.2.5(@angular/core@19.2.5(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2)
+      '@angular/core': 19.2.5(rxjs@7.8.2)(zone.js@0.15.0)
+      tslib: 2.8.1
+
+  '@foblex/utils@1.1.1':
+    dependencies:
+      tslib: 2.8.1
 
   '@inquirer/checkbox@4.1.4(@types/node@18.19.86)':
     dependencies:
