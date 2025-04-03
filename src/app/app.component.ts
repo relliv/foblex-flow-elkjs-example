@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import {
   EFResizeHandleType,
   FCanvasComponent,
@@ -53,6 +53,8 @@ export class AppComponent implements OnInit {
   public foblexNodes: INode[] = [];
   public foblexEdges: IEdge[] = [];
 
+  public constructor(private changeDetectorRef: ChangeDetectorRef) {}
+
   public ngOnInit(): void {
     this.foblexGroups = this.createGroups(20);
     this.foblexEdges = this.createRandomWiredEdges(
@@ -63,8 +65,16 @@ export class AppComponent implements OnInit {
 
   // #region Foblex Events
 
+  private isLoaded = false;
+
   public onLoaded(): void {
-    this.fCanvas.fitToScreen(PointExtensions.initialize(50, 50), false);
+    if (this.isLoaded) {
+      return;
+    }
+
+    this.isLoaded = true;
+
+    // this.fCanvas.fitToScreen(PointExtensions.initialize(50, 50), false);
 
     timer(1000).subscribe(() => {
       this.elkLayout();
@@ -98,13 +108,55 @@ export class AppComponent implements OnInit {
       edges: [
         ...this.foblexEdges.map((edge) => ({
           id: edge.id,
-          sources: [edge.source],
-          targets: [edge.target],
+          sources: [edge.source], // Use node ID instead of handle ID
+          targets: [edge.target], // Use node ID instead of handle ID
         })),
       ],
     };
 
-    elk.layout(graph).then(console.log).catch(console.error);
+    elk
+      .layout(graph)
+      .then((result) => {
+        this.elkGroups = (
+          result?.children?.filter((node) => node.type === 'group') as any
+        ).map((node: any) => ({
+          id: node.id,
+          size: {
+            width: node.width,
+            height: node.height,
+          },
+          position: {
+            x: node.x,
+            y: node.y,
+          },
+        })) as IGroup[];
+        this.elkNodes = (
+          result?.children?.filter((node) => node.type === 'node') as any
+        ).map((node: any) => ({
+          id: node.id,
+          size: {
+            width: node.width,
+            height: node.height,
+          },
+          position: {
+            x: node.x,
+            y: node.y,
+          },
+          parentId: node.parentId,
+        })) as INode[];
+        this.elkEdges = (result?.edges as any).map((edge: any) => ({
+          id: edge.id,
+          source: edge.sources[0],
+          target: edge.targets[0],
+        })) as IEdge[];
+
+        console.log(this.elkGroups);
+        console.log(this.elkNodes);
+        console.log(this.elkEdges);
+
+        this.changeDetectorRef.detectChanges();
+      })
+      .catch(console.error);
   }
 
   // #endregion
@@ -159,20 +211,31 @@ export class AppComponent implements OnInit {
   ): IEdge[] => {
     const edges: IEdge[] = [];
 
+    // Make sure we have nodes to connect
+    if (nodes.length < 2) {
+      return edges;
+    }
+
     for (let i = 0; i < totalConnections; i++) {
-      const sourceNode: any =
-          nodes[faker.number.int({ min: 0, max: this.foblexNodes.length - 1 })],
-        targetNode: any =
-          nodes[faker.number.int({ min: 0, max: this.foblexNodes.length - 1 })],
-        sourceId = sourceNode.id,
-        targetId = targetNode.id;
+      // Make sure we don't exceed the array bounds
+      const maxIndex = Math.max(0, nodes.length - 1);
+      const sourceIndex = faker.number.int({ min: 0, max: maxIndex });
+      const targetIndex = faker.number.int({ min: 0, max: maxIndex });
+
+      // Make sure nodes exist
+      if (!nodes[sourceIndex] || !nodes[targetIndex]) {
+        continue;
+      }
+
+      const sourceId = nodes[sourceIndex].id;
+      const targetId = nodes[targetIndex].id;
 
       edges.push({
         id: uuidv4(),
         source: sourceId,
         target: targetId,
-        sourceHandle: 'output-' + sourceId,
-        targetHandle: 'input-' + targetId,
+        sourceHandle: sourceId,
+        targetHandle: targetId,
       });
     }
 

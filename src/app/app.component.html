@@ -5,8 +5,8 @@
     <!-- <f-rect-pattern/> -->
   </f-background>
 
-  <f-canvas>
-    @if (elkGroups) {
+  <f-canvas [fZoom]="true" [fZoomStep]="0.045">
+    @if (elkGroups && elkNodes && elkEdges) {
     <!-- Groups -->
     @for (group of elkGroups; track $index) {
     <div
@@ -18,7 +18,7 @@
     >
       Group {{ $index + 1 }}
 
-      @for (node of foblexNodes; track node.id) { @if (!node.parentId){
+      @for (node of elkNodes; track node.id) { @if (node.parentId){
       <div
         fNode
         fDragHandle
@@ -29,25 +29,21 @@
         Node {{ $index + 1 }}
 
         <!-- Left Connected Handle -->
-        <div
-          fNodeInput
-          [fInputId]="'input-' + node.id"
-          fInputConnectableSide="left"
-        ></div>
+        <div fNodeInput [fInputId]="node.id" fInputConnectableSide="left"></div>
 
         <!-- Right Connected Handle -->
         <div
           fNodeOutput
-          [fOutputId]="'output-' + node.id"
+          [fOutputId]="node.id"
           fOutputConnectableSide="right"
         ></div>
       </div>
       } }
     </div>
-    } }
+    }
 
     <!-- Nodes -->
-    @for (node of foblexNodes; track node.id) { @if (!node.parentId){
+    @for (node of elkNodes; track node.id) { @if (!node.parentId){
     <div
       fNode
       fDragHandle
@@ -58,31 +54,27 @@
       Node {{ $index + 1 }}
 
       <!-- Left Connected Handle -->
-      <div
-        fNodeInput
-        [fInputId]="'input-' + node.id"
-        fInputConnectableSide="left"
-      ></div>
+      <div fNodeInput [fInputId]="node.id" fInputConnectableSide="left"></div>
 
       <!-- Right Connected Handle -->
       <div
         fNodeOutput
-        [fOutputId]="'output-' + node.id"
+        [fOutputId]="node.id"
         fOutputConnectableSide="right"
       ></div>
     </div>
-    } }
+    } } }
 
     <!-- Edges -->
-    @for (edge of foblexEdges; track edge.id) {
+    <!-- @for (edge of elkEdges; track edge.id) {
     <f-connection
       fBehavior="fixed_center"
       fType="segment"
       [fConnectionId]="edge.id"
-      [fOutputId]="edge.sourceHandle"
-      [fInputId]="edge.targetHandle"
+      [fOutputId]="edge.source"
+      [fInputId]="edge.target"
     >
     </f-connection>
-    }
+    } -->
   </f-canvas>
 </f-flow>
