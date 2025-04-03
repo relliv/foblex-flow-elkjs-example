@@ -1,88 +1,88 @@
 <f-flow fDraggable (fLoaded)="onLoaded()">
+  <!-- Background -->
+  <f-background>
+    <f-circle-pattern />
+    <!-- <f-rect-pattern/> -->
+  </f-background>
+
   <f-canvas>
+    @if (elkGroups) {
+    <!-- Groups -->
+    @for (group of elkGroups; track $index) {
     <div
       fGroup
       fDragHandle
-      fGroupId="group1"
-      class="with-padding"
-      [fGroupPosition]="{ x: 0, y: 0 }"
-      [fGroupSize]="{ width: 300, height: 300 }"
+      [fGroupId]="group.id"
+      [fGroupPosition]="group.position || { x: 0, y: 0 }"
+      [fGroupSize]="group.size"
     >
-      I'm Group 1 with padding
-    </div>
-    <div
-      fGroup
-      fDragHandle
-      fGroupId="group3"
-      fGroupParentId="group1"
-      [fGroupPosition]="{ x: 30, y: 30 }"
-      [fGroupSize]="{ width: 200, height: 200 }"
-    >
-      I'm Group 3 in Group 1
-    </div>
-    <div
-      fGroup
-      fDragHandle
-      fGroupId="group2"
-      [fGroupPosition]="{ x: 320, y: 0 }"
-      [fGroupSize]="{ width: 300, height: 300 }"
-    >
-      I'm Group 2
-      <div fResizeHandle [fResizeHandleType]="eResizeHandleType.LEFT_TOP"></div>
+      Group {{ $index + 1 }}
+
+      @for (node of foblexNodes; track node.id) { @if (!node.parentId){
       <div
-        fResizeHandle
-        [fResizeHandleType]="eResizeHandleType.RIGHT_TOP"
-      ></div>
-      <div
-        fResizeHandle
-        [fResizeHandleType]="eResizeHandleType.LEFT_BOTTOM"
-      ></div>
-      <div
-        fResizeHandle
-        [fResizeHandleType]="eResizeHandleType.RIGHT_BOTTOM"
-      ></div>
+        fNode
+        fDragHandle
+        [fNodeId]="node.id"
+        [fNodePosition]="node.position || { x: 0, y: 0 }"
+        [fNodeSize]="node.size"
+      >
+        Node {{ $index + 1 }}
+
+        <!-- Left Connected Handle -->
+        <div
+          fNodeInput
+          [fInputId]="'input-' + node.id"
+          fInputConnectableSide="left"
+        ></div>
+
+        <!-- Right Connected Handle -->
+        <div
+          fNodeOutput
+          [fOutputId]="'output-' + node.id"
+          fOutputConnectableSide="right"
+        ></div>
+      </div>
+      } }
     </div>
-    <div
-      fGroup
-      fDragHandle
-      fGroupId="group4"
-      fGroupParentId="group2"
-      [fGroupPosition]="{ x: 350, y: 50 }"
-      [fGroupSize]="{ width: 200, height: 200 }"
-    >
-      I'm Group 4 in Group 2
-    </div>
+    } }
+
+    <!-- Nodes -->
+    @for (node of foblexNodes; track node.id) { @if (!node.parentId){
     <div
       fNode
       fDragHandle
-      fNodeId="node1"
-      fNodeParentId="group2"
-      [fNodePosition]="{ x: 330, y: 90 }"
-      [fNodeSize]="{ width: 240, height: 80 }"
+      [fNodeId]="node.id"
+      [fNodePosition]="node.position || { x: 0, y: 0 }"
+      [fNodeSize]="node.size"
     >
-      I'm Node 1 in Group 2
-      <div fResizeHandle [fResizeHandleType]="eResizeHandleType.LEFT_TOP"></div>
+      Node {{ $index + 1 }}
+
+      <!-- Left Connected Handle -->
       <div
-        fResizeHandle
-        [fResizeHandleType]="eResizeHandleType.RIGHT_TOP"
+        fNodeInput
+        [fInputId]="'input-' + node.id"
+        fInputConnectableSide="left"
       ></div>
+
+      <!-- Right Connected Handle -->
       <div
-        fResizeHandle
-        [fResizeHandleType]="eResizeHandleType.LEFT_BOTTOM"
-      ></div>
-      <div
-        fResizeHandle
-        [fResizeHandleType]="eResizeHandleType.RIGHT_BOTTOM"
+        fNodeOutput
+        [fOutputId]="'output-' + node.id"
+        fOutputConnectableSide="right"
       ></div>
     </div>
-    <div
-      fNode
-      fDragHandle
-      fNodeId="node2"
-      fNodeParentId="node1"
-      [fNodePosition]="{ x: 360, y: 120 }"
+    } }
+
+    <!-- Edges -->
+    @for (edge of foblexEdges; track edge.id) {
+    <f-connection
+      fBehavior="fixed_center"
+      fType="segment"
+      [fConnectionId]="edge.id"
+      [fOutputId]="edge.sourceHandle"
+      [fInputId]="edge.targetHandle"
     >
-      I'm Node 2 in Node 1
-    </div>
+    </f-connection>
+    }
   </f-canvas>
 </f-flow>
