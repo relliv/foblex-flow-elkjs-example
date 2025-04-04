@@ -56,7 +56,7 @@ export class AppComponent implements OnInit {
   public constructor(private changeDetectorRef: ChangeDetectorRef) {}
 
   public ngOnInit(): void {
-    this.foblexGroups = this.createGroups(20);
+    this.createGroups(20);
     this.foblexEdges = this.createRandomWiredEdges(
       this.foblexNodes,
       this.foblexNodes.length / 3
@@ -154,7 +154,9 @@ export class AppComponent implements OnInit {
         console.log(this.elkNodes);
         console.log(this.elkEdges);
 
-        this.fCanvas.fitToScreen(PointExtensions.initialize(50, 50), false);
+        timer(250).subscribe(() => {
+          this.fCanvas.fitToScreen(PointExtensions.initialize(100, 100), false);
+        });
 
         this.changeDetectorRef.detectChanges();
       })
@@ -166,9 +168,7 @@ export class AppComponent implements OnInit {
   // #region Mock Methods
 
   private createGroups(count: number): IGroup[] {
-    return Array.from({ length: count }).map(() => {
-      this.foblexNodes.push(...this.createNodes());
-
+    this.foblexGroups = Array.from({ length: count }).map(() => {
       const size = {
         width: faker.number.int({ min: 400, max: 550 }),
         height: faker.number.int({ min: 400, max: 550 }),
@@ -179,6 +179,12 @@ export class AppComponent implements OnInit {
         size,
       };
     });
+
+    this.foblexGroups.forEach(() => {
+      this.foblexNodes.push(...this.createNodes());
+    });
+
+    return this.foblexGroups;
   }
 
   private createNodes(): INode[] {
@@ -187,10 +193,12 @@ export class AppComponent implements OnInit {
     return Array.from({ length: randomNodeCount }).map(() => {
       let parentId = null;
 
+      console.log(this.foblexGroups.length);
+
       if (Math.random() > 0.5) {
         parentId =
           this.foblexGroups[
-            Math.floor(Math.random() * this.foblexGroups.length)
+            faker.number.int({ min: 0, max: this.foblexGroups.length - 1 })
           ]?.id;
       }
 
