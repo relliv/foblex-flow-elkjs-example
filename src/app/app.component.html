@@ -7,74 +7,79 @@
 
   <f-canvas [fZoom]="true" [fZoomStep]="0.045">
     @if (elkGroups && elkNodes && elkEdges) {
-    <!-- Groups -->
-    @for (group of elkGroups; track $index) {
-    <div
-      fGroup
-      fDragHandle
-      [fGroupId]="group.id"
-      [fGroupPosition]="group.position || { x: 0, y: 0 }"
-      [fGroupSize]="group.size"
-    >
-      Group {{ $index + 1 }}
-
-      @for (node of elkNodes; track node.id) { @if (node.parentId){
-      <div
-        fNode
-        fDragHandle
-        [fNodeId]="node.id"
-        [fNodePosition]="node.position || { x: 0, y: 0 }"
-        [fNodeSize]="node.size"
-      >
-        Node {{ $index + 1 }}
-
-        <!-- Left Connected Handle -->
-        <div fNodeInput [fInputId]="node.id" fInputConnectableSide="left"></div>
-
-        <!-- Right Connected Handle -->
+      <!-- Groups -->
+      @for (group of elkGroups; track $index) {
         <div
-          fNodeOutput
-          [fOutputId]="node.id"
-          fOutputConnectableSide="right"
-        ></div>
-      </div>
-      } }
-    </div>
+          fGroup
+          fDragHandle
+          [fGroupId]="group.id"
+          [fGroupPosition]="group.position || { x: 0, y: 0 }"
+          [fGroupSize]="group.size">
+          Group {{ $index + 1 }}
+
+          @for (node of elkNodes; track node.id) {
+            @if (node.parentId) {
+              <div
+                fNode
+                fDragHandle
+                [fNodeId]="node.id"
+                [fNodePosition]="node.position || { x: 0, y: 0 }"
+                [fNodeSize]="node.size">
+                Node {{ $index + 1 }}
+
+                <!-- Left Connected Handle -->
+                <div
+                  fNodeInput
+                  [fInputId]="node.id"
+                  fInputConnectableSide="left"></div>
+
+                <!-- Right Connected Handle -->
+                <div
+                  fNodeOutput
+                  [fOutputId]="node.id"
+                  fOutputConnectableSide="right"></div>
+              </div>
+            }
+          }
+        </div>
+      }
+
+      <!-- Nodes -->
+      @for (node of elkNodes; track node.id) {
+        @if (!node.parentId) {
+          <div
+            fNode
+            fDragHandle
+            [fNodeId]="node.id"
+            [fNodePosition]="node.position || { x: 0, y: 0 }"
+            [fNodeSize]="node.size">
+            Node {{ $index + 1 }}
+
+            <!-- Left Connected Handle -->
+            <div
+              fNodeInput
+              [fInputId]="node.id"
+              fInputConnectableSide="left"></div>
+
+            <!-- Right Connected Handle -->
+            <div
+              fNodeOutput
+              [fOutputId]="node.id"
+              fOutputConnectableSide="right"></div>
+          </div>
+        }
+      }
     }
 
-    <!-- Nodes -->
-    @for (node of elkNodes; track node.id) { @if (!node.parentId){
-    <div
-      fNode
-      fDragHandle
-      [fNodeId]="node.id"
-      [fNodePosition]="node.position || { x: 0, y: 0 }"
-      [fNodeSize]="node.size"
-    >
-      Node {{ $index + 1 }}
-
-      <!-- Left Connected Handle -->
-      <div fNodeInput [fInputId]="node.id" fInputConnectableSide="left"></div>
-
-      <!-- Right Connected Handle -->
-      <div
-        fNodeOutput
-        [fOutputId]="node.id"
-        fOutputConnectableSide="right"
-      ></div>
-    </div>
-    } } }
-
     <!-- Edges -->
-    <!-- @for (edge of elkEdges; track edge.id) {
-    <f-connection
-      fBehavior="fixed_center"
-      fType="segment"
-      [fConnectionId]="edge.id"
-      [fOutputId]="edge.source"
-      [fInputId]="edge.target"
-    >
-    </f-connection>
-    } -->
+    @for (edge of elkEdges; track edge.id) {
+      <f-connection
+        fBehavior="fixed_center"
+        fType="segment"
+        [fConnectionId]="edge.id"
+        [fOutputId]="edge.source"
+        [fInputId]="edge.target">
+      </f-connection>
+    }
   </f-canvas>
 </f-flow>
