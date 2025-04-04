@@ -74,8 +74,6 @@ export class AppComponent implements OnInit {
 
     this.isLoaded = true;
 
-    // this.fCanvas.fitToScreen(PointExtensions.initialize(50, 50), false);
-
     timer(1000).subscribe(() => {
       this.elkLayout();
     });
@@ -90,14 +88,14 @@ export class AppComponent implements OnInit {
       id: 'root',
       layoutOptions: { 'elk.algorithm': 'layered' },
       children: [
-        ...this.foblexGroups.map((group) => ({
+        ...this.foblexGroups.map(group => ({
           id: group.id,
           width: group.size.width,
           height: group.size.height,
           type: 'group',
           parentId: null,
         })),
-        ...this.foblexNodes.map((node) => ({
+        ...this.foblexNodes.map(node => ({
           id: node.id,
           width: node.size.width,
           height: node.size.height,
@@ -106,19 +104,19 @@ export class AppComponent implements OnInit {
         })),
       ],
       edges: [
-        ...this.foblexEdges.map((edge) => ({
+        ...this.foblexEdges.map(edge => ({
           id: edge.id,
-          sources: [edge.source], // Use node ID instead of handle ID
-          targets: [edge.target], // Use node ID instead of handle ID
+          sources: [edge.source],
+          targets: [edge.target],
         })),
       ],
     };
 
     elk
       .layout(graph)
-      .then((result) => {
+      .then(result => {
         this.elkGroups = (
-          result?.children?.filter((node) => node.type === 'group') as any
+          result?.children?.filter(node => node.type === 'group') as any
         ).map((node: any) => ({
           id: node.id,
           size: {
@@ -130,8 +128,9 @@ export class AppComponent implements OnInit {
             y: node.y,
           },
         })) as IGroup[];
+
         this.elkNodes = (
-          result?.children?.filter((node) => node.type === 'node') as any
+          result?.children?.filter(node => node.type === 'node') as any
         ).map((node: any) => ({
           id: node.id,
           size: {
@@ -144,6 +143,7 @@ export class AppComponent implements OnInit {
           },
           parentId: node.parentId,
         })) as INode[];
+
         this.elkEdges = (result?.edges as any).map((edge: any) => ({
           id: edge.id,
           source: edge.sources[0],
@@ -153,6 +153,8 @@ export class AppComponent implements OnInit {
         console.log(this.elkGroups);
         console.log(this.elkNodes);
         console.log(this.elkEdges);
+
+        this.fCanvas.fitToScreen(PointExtensions.initialize(50, 50), false);
 
         this.changeDetectorRef.detectChanges();
       })
@@ -168,8 +170,8 @@ export class AppComponent implements OnInit {
       this.foblexNodes.push(...this.createNodes());
 
       const size = {
-        width: Math.random() * 200,
-        height: Math.random() * 200,
+        width: faker.number.int({ min: 400, max: 550 }),
+        height: faker.number.int({ min: 400, max: 550 }),
       };
 
       return {
@@ -193,8 +195,8 @@ export class AppComponent implements OnInit {
       }
 
       const size = {
-        width: Math.random() * 250,
-        height: Math.random() * 150,
+        width: faker.number.int({ min: 100, max: 350 }),
+        height: faker.number.int({ min: 100, max: 350 }),
       };
 
       return {
