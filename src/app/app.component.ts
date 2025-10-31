@@ -90,10 +90,12 @@ export class AppComponent implements OnInit {
       children: [
         ...this.foblexGroups.map(group => ({
           id: group.id,
-          width: group.size.width,
-          height: group.size.height,
+          // Don't set width/height - let ELK calculate based on children
           type: 'group',
           parentId: null,
+          layoutOptions: {
+            'elk.padding': '[top=50,left=50,bottom=50,right=50]',
+          },
         })),
         ...this.foblexNodes.map(node => ({
           id: node.id,
@@ -169,14 +171,10 @@ export class AppComponent implements OnInit {
 
   private createGroups(count: number): IGroup[] {
     this.foblexGroups = Array.from({ length: count }).map(() => {
-      const size = {
-        width: faker.number.int({ min: 400, max: 550 }),
-        height: faker.number.int({ min: 400, max: 550 }),
-      };
-
       return {
         id: uuidv4(),
-        size,
+        // Minimum initial size - ELK will expand based on children
+        size: { width: 200, height: 200 },
       };
     });
 

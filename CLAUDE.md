@@ -43,7 +43,8 @@ The application follows this data flow pattern:
 
 2. **Layout Calculation** (elkLayout):
    - Converts Foblex data structures to ELK.js graph format
-   - ELK.js computes positions for groups and nodes using layered algorithm
+   - Groups are passed without width/height - ELK.js calculates sizes based on child nodes
+   - ELK.js computes positions for groups and nodes using layered algorithm with padding
    - Results are mapped back to Foblex-compatible format
    - Canvas auto-fits to display all content
 
@@ -85,10 +86,10 @@ interface IEdge {
   - `foblexGroups/Nodes/Edges` - Initial random data
   - `elkGroups/Nodes/Edges` - Layout-calculated positions
 - Key methods:
-  - `createGroups()` - Generates random groups with Faker
-  - `createNodes()` - Creates nodes with 50% chance of group assignment
+  - `createGroups()` - Generates random groups (sizes calculated by ELK)
+  - `createNodes()` - Creates nodes with random dimensions and 50% chance of group assignment
   - `createRandomWiredEdges()` - Generates random connections
-  - `elkLayout()` - Executes ELK layout algorithm
+  - `elkLayout()` - Executes ELK layout algorithm (groups auto-sized based on children)
   - `onLoaded()` - Triggers layout after canvas initialization
 
 ### Template Architecture
@@ -113,6 +114,8 @@ The template (`src/app/app.component.html`) uses nested @for loops:
 - Algorithm: `'layered'` - Hierarchical layout for directed graphs
 - Node types: Distinguished as 'group' or 'node' for proper hierarchy
 - Group support: Child nodes assigned to parent groups via `parentId`
+- Group sizing: Groups do not specify width/height, allowing ELK to calculate based on children
+- Padding: Groups have 50px padding on all sides for visual spacing
 
 ## Development Patterns
 
@@ -128,8 +131,9 @@ layoutOptions: {
 
 ### Modifying Node/Group Generation
 
-- Group dimensions: `src/app/app.component.ts:173-174`
-- Node dimensions: `src/app/app.component.ts:206-207`
+- Group dimensions: Start at 200x200 minimum, automatically expanded by ELK.js based on child nodes
+- Group padding: `src/app/app.component.ts:97` (currently 50px on all sides)
+- Node dimensions: `src/app/app.component.ts:206-207` (random 100-350px)
 - Group assignment probability: `src/app/app.component.ts:198` (currently 50%)
 - Node count per group: `src/app/app.component.ts:191` (random up to 20)
 
