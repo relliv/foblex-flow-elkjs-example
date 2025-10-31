@@ -91,7 +91,10 @@ export class AppComponent implements OnInit {
       id: group.id,
       type: 'group',
       layoutOptions: {
+        'elk.algorithm': 'layered',
         'elk.padding': '[top=50,left=50,bottom=50,right=50]',
+        'elk.direction': 'RIGHT',
+        'elk.spacing.nodeNode': '50',
       },
       // Nest child nodes inside their parent groups
       children: this.foblexNodes()
@@ -116,7 +119,12 @@ export class AppComponent implements OnInit {
 
     const graph = {
       id: 'root',
-      layoutOptions: { 'elk.algorithm': 'layered' },
+      layoutOptions: {
+        'elk.algorithm': 'layered',
+        'elk.direction': 'RIGHT',
+        'elk.spacing.nodeNode': '80',
+        'elk.layered.spacing.nodeNodeBetweenLayers': '80',
+      },
       children: [...groups, ...rootNodes],
       edges: [
         ...this.foblexEdges().map(edge => ({
@@ -127,9 +135,12 @@ export class AppComponent implements OnInit {
       ],
     };
 
+    console.log('Input graph to ELK:', JSON.stringify(graph, null, 2));
+
     elk
       .layout(graph)
       .then(result => {
+        console.log('ELK Result:', JSON.stringify(result, null, 2));
         // Extract groups from result
         const groups =
           (result?.children?.filter(
@@ -201,9 +212,13 @@ export class AppComponent implements OnInit {
           })) as IEdge[]
         );
 
+        console.log('=== Final Data ===');
         console.log('ELK Groups:', this.elkGroups());
         console.log('ELK Nodes:', this.elkNodes());
         console.log('ELK Edges:', this.elkEdges());
+        console.log('Sample node positions:',
+          this.elkNodes().slice(0, 3).map(n => ({ id: n.id, pos: n.position }))
+        );
 
         timer(250).subscribe(() => {
           this.fCanvas.fitToScreen(PointExtensions.initialize(100, 100), false);
