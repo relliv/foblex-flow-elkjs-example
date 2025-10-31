@@ -221,28 +221,21 @@ export class AppComponent implements OnInit {
       };
     });
 
-    this.foblexGroups.forEach(() => {
-      this.foblexNodes.push(...this.createNodes());
+    // Create nodes for each group - they belong to that specific group
+    this.foblexGroups.forEach((group) => {
+      this.foblexNodes.push(...this.createNodesForGroup(group.id));
     });
+
+    // Create some root-level nodes (no parent)
+    this.foblexNodes.push(...this.createNodesForGroup(null));
 
     return this.foblexGroups;
   }
 
-  private createNodes(): INode[] {
-    const randomNodeCount = Math.random() * 20;
+  private createNodesForGroup(parentId: string | null): INode[] {
+    const randomNodeCount = faker.number.int({ min: 3, max: 10 });
 
     return Array.from({ length: randomNodeCount }).map(() => {
-      let parentId = null;
-
-      // console.log(this.foblexGroups.length);
-
-      if (Math.random() > 0.5) {
-        parentId =
-          this.foblexGroups[
-            faker.number.int({ min: 0, max: this.foblexGroups.length - 1 })
-          ]?.id;
-      }
-
       const size = {
         width: faker.number.int({ min: 100, max: 350 }),
         height: faker.number.int({ min: 100, max: 350 }),
@@ -251,7 +244,7 @@ export class AppComponent implements OnInit {
       return {
         id: uuidv4(),
         size,
-        parentId,
+        parentId, // Keep the node in its assigned group
       };
     });
   }

@@ -87,8 +87,8 @@ interface IEdge {
   - `foblexGroups/Nodes/Edges` - Initial random data
   - `elkGroups/Nodes/Edges` - Layout-calculated positions
 - Key methods:
-  - `createGroups()` - Generates random groups (sizes calculated by ELK)
-  - `createNodes()` - Creates nodes with random dimensions and 50% chance of group assignment
+  - `createGroups()` - Generates random groups and their child nodes (sizes calculated by ELK)
+  - `createNodesForGroup()` - Creates 3-10 nodes for a specific group (or root level if null)
   - `createRandomWiredEdges()` - Generates random connections
   - `elkLayout()` - Executes ELK layout algorithm (groups auto-sized based on children)
   - `onLoaded()` - Triggers layout after canvas initialization
@@ -134,10 +134,11 @@ layoutOptions: {
 ### Modifying Node/Group Generation
 
 - Group dimensions: Start at 200x200 minimum, automatically expanded by ELK.js based on child nodes
-- Group padding: `src/app/app.component.ts:97` (currently 50px on all sides)
-- Node dimensions: `src/app/app.component.ts:206-207` (random 100-350px)
-- Group assignment probability: `src/app/app.component.ts:198` (currently 50%)
-- Node count per group: `src/app/app.component.ts:191` (random up to 20)
+- Group padding: `src/app/app.component.ts:92` (currently 50px on all sides)
+- Node dimensions: `src/app/app.component.ts:239-242` (random 100-350px)
+- **Node assignment**: Each group gets its own dedicated nodes (parentId matches group)
+- Node count per group: `src/app/app.component.ts:236` (random 3-10 per group)
+- Root-level nodes: Additional nodes created with no parent (line 230)
 
 ### Styling
 
