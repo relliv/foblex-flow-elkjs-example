@@ -1,8 +1,16 @@
-import { Component, OnInit, signal, ViewChild } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  QueryList,
+  signal,
+  ViewChild,
+  ViewChildren,
+} from '@angular/core';
 import {
   EFResizeHandleType,
   FCanvasComponent,
   FFlowModule,
+  FNodeDirective,
 } from '@foblex/flow';
 import { IPoint, ISize, PointExtensions } from '@foblex/2d';
 import { v4 as uuidv4 } from 'uuid';
@@ -42,6 +50,9 @@ interface IEdge {
 export class AppComponent implements OnInit {
   @ViewChild(FCanvasComponent, { static: true })
   public fCanvas!: FCanvasComponent;
+
+  @ViewChildren(FNodeDirective)
+  public fNodes!: QueryList<FNodeDirective>;
 
   protected readonly eResizeHandleType = EFResizeHandleType;
 
@@ -204,6 +215,20 @@ export class AppComponent implements OnInit {
 
         this.elkNodes.set(allNodes);
 
+        timer(2000).subscribe(() => {
+          this.elkNodes.update(nodes => [...nodes]);
+
+          this.fNodes.forEach(node => {
+            // Force position update by accessing the internal position property
+            const pos = typeof node.position === 'function'
+              ? node.position()
+              : node.position;
+            if (pos) {
+              node._position = { x: pos.x, y: pos.y };
+            }
+          });
+        });
+
         this.elkEdges.set(
           (result?.edges as any).map((edge: any) => ({
             id: edge.id,
@@ -216,8 +241,11 @@ export class AppComponent implements OnInit {
         console.log('ELK Groups:', this.elkGroups());
         console.log('ELK Nodes:', this.elkNodes());
         console.log('ELK Edges:', this.elkEdges());
-        console.log('Sample node positions:',
-          this.elkNodes().slice(0, 3).map(n => ({ id: n.id, pos: n.position }))
+        console.log(
+          'Sample node positions:',
+          this.elkNodes()
+            .slice(0, 3)
+            .map(n => ({ id: n.id, pos: n.position }))
         );
 
         timer(250).subscribe(() => {
@@ -243,17 +271,17 @@ export class AppComponent implements OnInit {
     this.foblexGroups.set(groups);
 
     // Create nodes for each group - they belong to that specific group
-    groups.forEach((group) => {
+    groups.forEach(group => {
       this.foblexNodes.update(nodes => [
         ...nodes,
-        ...this.createNodesForGroup(group.id)
+        ...this.createNodesForGroup(group.id),
       ]);
     });
 
     // Create some root-level nodes (no parent)
     this.foblexNodes.update(nodes => [
       ...nodes,
-      ...this.createNodesForGroup(null)
+      ...this.createNodesForGroup(null),
     ]);
 
     return groups;
