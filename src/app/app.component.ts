@@ -129,7 +129,10 @@ export class AppComponent implements OnInit {
       .layout(graph)
       .then(result => {
         // Extract groups from result
-        const groups = (result?.children?.filter((node: any) => node.type === 'group') as any) || [];
+        const groups =
+          (result?.children?.filter(
+            (node: any) => node.type === 'group'
+          ) as any) || [];
 
         this.elkGroups = groups.map((group: any) => ({
           id: group.id,
@@ -167,7 +170,8 @@ export class AppComponent implements OnInit {
         });
 
         // Process root-level nodes (positions are absolute)
-        const rootNodes = result?.children?.filter((node: any) => node.type === 'node') || [];
+        const rootNodes =
+          result?.children?.filter((node: any) => node.type === 'node') || [];
         rootNodes.forEach((node: any) => {
           allNodes.push({
             id: node.id,
@@ -230,7 +234,7 @@ export class AppComponent implements OnInit {
     return Array.from({ length: randomNodeCount }).map(() => {
       let parentId = null;
 
-      console.log(this.foblexGroups.length);
+      // console.log(this.foblexGroups.length);
 
       if (Math.random() > 0.5) {
         parentId =
