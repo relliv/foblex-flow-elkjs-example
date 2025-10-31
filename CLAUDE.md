@@ -42,10 +42,11 @@ The application follows this data flow pattern:
    - Creates random edges connecting nodes
 
 2. **Layout Calculation** (elkLayout):
-   - Converts Foblex data structures to ELK.js graph format
-   - Groups are passed without width/height - ELK.js calculates sizes based on child nodes
-   - ELK.js computes positions for groups and nodes using layered algorithm with padding
-   - Results are mapped back to Foblex-compatible format
+   - Converts Foblex data structures to ELK.js hierarchical graph format
+   - Child nodes are nested inside their parent groups (not a flat list)
+   - Groups are passed without width/height - ELK.js calculates sizes based on children
+   - ELK.js computes positions using layered algorithm with 50px padding
+   - Results are flattened back to Foblex format (child positions relative to parent)
    - Canvas auto-fits to display all content
 
 3. **Rendering**:
@@ -113,9 +114,10 @@ The template (`src/app/app.component.html`) uses nested @for loops:
 
 - Algorithm: `'layered'` - Hierarchical layout for directed graphs
 - Node types: Distinguished as 'group' or 'node' for proper hierarchy
-- Group support: Child nodes assigned to parent groups via `parentId`
+- **Graph structure**: Hierarchical (child nodes nested inside parent groups, not flat with `parentId`)
 - Group sizing: Groups do not specify width/height, allowing ELK to calculate based on children
 - Padding: Groups have 50px padding on all sides for visual spacing
+- **Child positioning**: Node positions inside groups are relative to the group's origin
 
 ## Development Patterns
 

@@ -84,27 +84,38 @@ export class AppComponent implements OnInit {
   // #region Elk Methods
 
   public elkLayout(): void {
-    const graph = {
-      id: 'root',
-      layoutOptions: { 'elk.algorithm': 'layered' },
-      children: [
-        ...this.foblexGroups.map(group => ({
-          id: group.id,
-          // Don't set width/height - let ELK calculate based on children
-          type: 'group',
-          parentId: null,
-          layoutOptions: {
-            'elk.padding': '[top=50,left=50,bottom=50,right=50]',
-          },
-        })),
-        ...this.foblexNodes.map(node => ({
+    // Build hierarchical structure for ELK.js
+    const groups = this.foblexGroups.map(group => ({
+      id: group.id,
+      type: 'group',
+      layoutOptions: {
+        'elk.padding': '[top=50,left=50,bottom=50,right=50]',
+      },
+      // Nest child nodes inside their parent groups
+      children: this.foblexNodes
+        .filter(node => node.parentId === group.id)
+        .map(node => ({
           id: node.id,
           width: node.size.width,
           height: node.size.height,
           type: 'node',
-          parentId: node.parentId,
         })),
-      ],
+    }));
+
+    // Root-level nodes (no parent)
+    const rootNodes = this.foblexNodes
+      .filter(node => !node.parentId)
+      .map(node => ({
+        id: node.id,
+        width: node.size.width,
+        height: node.size.height,
+        type: 'node',
+      }));
+
+    const graph = {
+      id: 'root',
+      layoutOptions: { 'elk.algorithm': 'layered' },
+      children: [...groups, ...rootNodes],
       edges: [
         ...this.foblexEdges.map(edge => ({
           id: edge.id,
@@ -117,34 +128,62 @@ export class AppComponent implements OnInit {
     elk
       .layout(graph)
       .then(result => {
-        this.elkGroups = (
-          result?.children?.filter(node => node.type === 'group') as any
-        ).map((node: any) => ({
-          id: node.id,
+        // Extract groups from result
+        const groups = (result?.children?.filter((node: any) => node.type === 'group') as any) || [];
+
+        this.elkGroups = groups.map((group: any) => ({
+          id: group.id,
           size: {
-            width: node.width,
-            height: node.height,
+            width: group.width,
+            height: group.height,
           },
           position: {
-            x: node.x,
-            y: node.y,
+            x: group.x || 0,
+            y: group.y || 0,
           },
         })) as IGroup[];
 
-        this.elkNodes = (
-          result?.children?.filter(node => node.type === 'node') as any
-        ).map((node: any) => ({
-          id: node.id,
-          size: {
-            width: node.width,
-            height: node.height,
-          },
-          position: {
-            x: node.x,
-            y: node.y,
-          },
-          parentId: node.parentId,
-        })) as INode[];
+        // Extract all nodes - both from groups and root level
+        const allNodes: INode[] = [];
+
+        // Process nodes inside groups (positions are relative to group)
+        groups.forEach((group: any) => {
+          if (group.children) {
+            group.children.forEach((node: any) => {
+              allNodes.push({
+                id: node.id,
+                size: {
+                  width: node.width,
+                  height: node.height,
+                },
+                position: {
+                  x: node.x || 0,
+                  y: node.y || 0,
+                },
+                parentId: group.id,
+              });
+            });
+          }
+        });
+
+        // Process root-level nodes (positions are absolute)
+        const rootNodes = result?.children?.filter((node: any) => node.type === 'node') || [];
+        rootNodes.forEach((node: any) => {
+          allNodes.push({
+            id: node.id,
+            size: {
+              width: node.width,
+              height: node.height,
+            },
+            position: {
+              x: node.x || 0,
+              y: node.y || 0,
+            },
+            parentId: null,
+          });
+        });
+
+        this.elkNodes = allNodes;
 
         this.elkEdges = (result?.edges as any).map((edge: any) => ({
           id: edge.id,
@@ -152,9 +191,9 @@ export class AppComponent implements OnInit {
           target: edge.targets[0],
         })) as IEdge[];
 
-        console.log(this.elkGroups);
-        console.log(this.elkNodes);
-        console.log(this.elkEdges);
+        console.log('ELK Groups:', this.elkGroups);
+        console.log('ELK Nodes:', this.elkNodes);
+        console.log('ELK Edges:', this.elkEdges);
 
         timer(250).subscribe(() => {
           this.fCanvas.fitToScreen(PointExtensions.initialize(100, 100), false);
