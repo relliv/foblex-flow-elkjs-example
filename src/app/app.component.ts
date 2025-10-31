@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, signal, ViewChild } from '@angular/core';
 import {
   EFResizeHandleType,
   FCanvasComponent,
@@ -45,21 +45,23 @@ export class AppComponent implements OnInit {
 
   protected readonly eResizeHandleType = EFResizeHandleType;
 
-  public elkGroups: IGroup[] = [];
-  public elkNodes: INode[] = [];
-  public elkEdges: IEdge[] = [];
+  // Signals for ELK layout results
+  public elkGroups = signal<IGroup[]>([]);
+  public elkNodes = signal<INode[]>([]);
+  public elkEdges = signal<IEdge[]>([]);
 
-  public foblexGroups: IGroup[] = [];
-  public foblexNodes: INode[] = [];
-  public foblexEdges: IEdge[] = [];
-
-  public constructor(private changeDetectorRef: ChangeDetectorRef) {}
+  // Signals for initial Foblex data
+  public foblexGroups = signal<IGroup[]>([]);
+  public foblexNodes = signal<INode[]>([]);
+  public foblexEdges = signal<IEdge[]>([]);
 
   public ngOnInit(): void {
     this.createGroups(20);
-    this.foblexEdges = this.createRandomWiredEdges(
-      this.foblexNodes,
-      this.foblexNodes.length / 3
+    this.foblexEdges.set(
+      this.createRandomWiredEdges(
+        this.foblexNodes(),
+        this.foblexNodes().length / 3
+      )
     );
   }
 
@@ -85,14 +87,14 @@ export class AppComponent implements OnInit {
 
   public elkLayout(): void {
     // Build hierarchical structure for ELK.js
-    const groups = this.foblexGroups.map(group => ({
+    const groups = this.foblexGroups().map(group => ({
       id: group.id,
       type: 'group',
       layoutOptions: {
         'elk.padding': '[top=50,left=50,bottom=50,right=50]',
       },
       // Nest child nodes inside their parent groups
-      children: this.foblexNodes
+      children: this.foblexNodes()
         .filter(node => node.parentId === group.id)
         .map(node => ({
           id: node.id,
@@ -103,7 +105,7 @@ export class AppComponent implements OnInit {
     }));
 
     // Root-level nodes (no parent)
-    const rootNodes = this.foblexNodes
+    const rootNodes = this.foblexNodes()
       .filter(node => !node.parentId)
       .map(node => ({
         id: node.id,
@@ -117,7 +119,7 @@ export class AppComponent implements OnInit {
       layoutOptions: { 'elk.algorithm': 'layered' },
       children: [...groups, ...rootNodes],
       edges: [
-        ...this.foblexEdges.map(edge => ({
+        ...this.foblexEdges().map(edge => ({
           id: edge.id,
           sources: [edge.source],
           targets: [edge.target],
@@ -134,17 +136,19 @@ export class AppComponent implements OnInit {
             (node: any) => node.type === 'group'
           ) as any) || [];
 
-        this.elkGroups = groups.map((group: any) => ({
-          id: group.id,
-          size: {
-            width: group.width,
-            height: group.height,
-          },
-          position: {
-            x: group.x || 0,
-            y: group.y || 0,
-          },
-        })) as IGroup[];
+        this.elkGroups.set(
+          groups.map((group: any) => ({
+            id: group.id,
+            size: {
+              width: group.width,
+              height: group.height,
+            },
+            position: {
+              x: group.x || 0,
+              y: group.y || 0,
+            },
+          })) as IGroup[]
+        );
 
         // Extract all nodes - both from groups and root level
         const allNodes: INode[] = [];
@@ -187,23 +191,23 @@ export class AppComponent implements OnInit {
           });
         });
 
-        this.elkNodes = allNodes;
+        this.elkNodes.set(allNodes);
 
-        this.elkEdges = (result?.edges as any).map((edge: any) => ({
-          id: edge.id,
-          source: edge.sources[0],
-          target: edge.targets[0],
-        })) as IEdge[];
+        this.elkEdges.set(
+          (result?.edges as any).map((edge: any) => ({
+            id: edge.id,
+            source: edge.sources[0],
+            target: edge.targets[0],
+          })) as IEdge[]
+        );
 
-        console.log('ELK Groups:', this.elkGroups);
-        console.log('ELK Nodes:', this.elkNodes);
-        console.log('ELK Edges:', this.elkEdges);
+        console.log('ELK Groups:', this.elkGroups());
+        console.log('ELK Nodes:', this.elkNodes());
+        console.log('ELK Edges:', this.elkEdges());
 
         timer(250).subscribe(() => {
           this.fCanvas.fitToScreen(PointExtensions.initialize(100, 100), false);
         });
-
-        this.changeDetectorRef.detectChanges();
       })
       .catch(console.error);
   }
@@ -213,7 +217,7 @@ export class AppComponent implements OnInit {
   // #region Mock Methods
 
   private createGroups(count: number): IGroup[] {
-    this.foblexGroups = Array.from({ length: count }).map(() => {
+    const groups = Array.from({ length: count }).map(() => {
       return {
         id: uuidv4(),
         // Minimum initial size - ELK will expand based on children
@@ -221,15 +225,23 @@ export class AppComponent implements OnInit {
       };
     });
 
+    this.foblexGroups.set(groups);
+
     // Create nodes for each group - they belong to that specific group
-    this.foblexGroups.forEach((group) => {
-      this.foblexNodes.push(...this.createNodesForGroup(group.id));
+    groups.forEach((group) => {
+      this.foblexNodes.update(nodes => [
+        ...nodes,
+        ...this.createNodesForGroup(group.id)
+      ]);
     });
 
     // Create some root-level nodes (no parent)
-    this.foblexNodes.push(...this.createNodesForGroup(null));
+    this.foblexNodes.update(nodes => [
+      ...nodes,
+      ...this.createNodesForGroup(null)
+    ]);
 
-    return this.foblexGroups;
+    return groups;
   }
 
   private createNodesForGroup(parentId: string | null): INode[] {

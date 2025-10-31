@@ -8,11 +8,12 @@ This is a proof of concept Angular application demonstrating the integration of 
 
 ## Technology Stack
 
-- **Angular 19** - Modern Angular with standalone components
+- **Angular 19** - Modern Angular with standalone components and signals
 - **Foblex Flow** - Flow diagram library for node-based UIs
 - **ELK.js** - Automatic graph layout engine (layered algorithm)
 - **pnpm** - Package manager (version 9.15.9+)
 - **TypeScript 5.7** - Strict mode enabled
+- **Angular Signals** - Reactive state management (no Zone.js change detection needed)
 
 ## Common Commands
 
@@ -82,10 +83,12 @@ interface IEdge {
 ### Component Structure
 
 **AppComponent** (`src/app/app.component.ts`):
-- Single-component architecture
-- Manages two sets of data:
-  - `foblexGroups/Nodes/Edges` - Initial random data
-  - `elkGroups/Nodes/Edges` - Layout-calculated positions
+- Single-component architecture using Angular signals
+- **Reactive state with signals**:
+  - `foblexGroups/Nodes/Edges` - Signals holding initial random data
+  - `elkGroups/Nodes/Edges` - Signals holding layout-calculated positions
+  - All updates use `.set()` or `.update()` methods
+  - Template reads signal values with `()`  syntax (e.g., `elkGroups()`)
 - Key methods:
   - `createGroups()` - Generates random groups and their child nodes (sizes calculated by ELK)
   - `createNodesForGroup()` - Creates 3-10 nodes for a specific group (or root level if null)
@@ -120,6 +123,34 @@ The template (`src/app/app.component.html`) uses nested @for loops:
 - **Child positioning**: Node positions inside groups are relative to the group's origin
 
 ## Development Patterns
+
+### Working with Signals
+
+The application uses Angular signals for reactive state management:
+
+```typescript
+// Reading signal values
+const groups = this.elkGroups();  // Call signal as function
+
+// Setting signal values
+this.elkGroups.set([...newGroups]);
+
+// Updating signal values
+this.elkNodes.update(nodes => [...nodes, newNode]);
+```
+
+**Template usage**:
+```html
+@for (group of elkGroups(); track $index) {
+  <!-- group is the unwrapped value -->
+}
+```
+
+Benefits:
+- Fine-grained reactivity without Zone.js overhead
+- Automatic change detection when signals update
+- Better performance for large datasets
+- Type-safe reactive state
 
 ### Adding New Layout Options
 

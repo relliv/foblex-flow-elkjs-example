@@ -7,7 +7,7 @@
 
   <f-canvas [fZoom]="true" [fZoomStep]="0.045">
     <!-- Groups -->
-    @for (group of elkGroups; track $index) {
+    @for (group of elkGroups(); track $index) {
       <div
         fGroup
         fDragHandle
@@ -20,7 +20,7 @@
     }
 
     <!-- Nodes -->
-    @for (node of elkNodes; track node.id) {
+    @for (node of elkNodes(); track node.id) {
       <div
         fNode
         fDragHandle
@@ -43,7 +43,7 @@
     }
 
     <!-- Edges -->
-    @for (edge of elkEdges; track edge.id) {
+    @for (edge of elkEdges(); track edge.id) {
       <f-connection
         fBehavior="fixed_center"
         fType="segment"
