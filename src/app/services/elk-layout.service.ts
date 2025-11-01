@@ -10,6 +10,45 @@ import {
   INode,
 } from '../models/graph.interface';
 
+type GroupOrNode = 'group' | 'node';
+
+export interface IElkLayout {
+  id: string;
+  layoutOptions: any;
+  children: (IElkLayoutNode | IElkLayoutGroup)[];
+  edges: IElkLayoutEdge[];
+}
+
+export interface IElkLayoutGroup {
+  id: string;
+  height: number; // elk.js calculated height
+  width: number; // elk.js calculated width
+  x: number; // elk.js calculated x position
+  y: number; // elk.js calculated y position
+  original: IGroup;
+  layoutOptions: any;
+  children: IElkLayoutNode[];
+  edges: IElkLayoutEdge[];
+  type: GroupOrNode;
+}
+
+export interface IElkLayoutNode {
+  id: string;
+  width: number;
+  height: number;
+  x: number; // elk.js calculated x position
+  y: number; // elk.js calculated y position
+  original: INode;
+  type: GroupOrNode;
+}
+
+export interface IElkLayoutEdge {
+  id: string;
+  sources: string[];
+  targets: string[];
+  original: IEdge;
+}
+
 /**
  * Service responsible for graph layout using ELK.js
  * Follows Single Responsibility Principle - handles only layout calculations
@@ -68,23 +107,34 @@ export class ElkLayoutService {
    * Builds the ELK.js graph structure from input data
    * @private
    */
-  private buildElkGraph(input: ILayoutInput, options: IElkLayoutOptions): any {
+  private buildElkGraph(
+    input: ILayoutInput,
+    options: IElkLayoutOptions
+  ): IElkLayout {
     const { groups, nodes, edges, enableGroups } = input;
 
     // For layered algorithm with groups, use INCLUDE_CHILDREN for proper cross-hierarchical edges
     if (enableGroups && options.algorithm === 'layered') {
       // Build groups with hierarchy handling
-      const elkGroups = groups.map(group => {
-        const groupChildren = nodes
+      const elkGroups: IElkLayoutGroup[] = groups.map(group => {
+        const groupChildren: IElkLayoutNode[] = nodes
           .filter(node => node.parentId === group.id)
           .map(node => ({
             id: node.id,
             width: node.size.width,
             height: node.size.height,
+            x: 0, // elk.js calculated x position
+            y: 0, // elk.js calculated y position
+            original: node,
+            type: 'node',
           }));
 
         return {
           id: group.id,
+          height: 0, // elk.js calculated height
+          width: 0, // elk.js calculated width
+          x: 0, // elk.js calculated x position
+          y: 0, // elk.js calculated y position
           // Set INCLUDE_CHILDREN on groups to include them in single layout run
           layoutOptions: {
             'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
@@ -92,23 +142,30 @@ export class ElkLayoutService {
           },
           children: groupChildren,
           edges: [], // Edges will be at root level
+          original: group,
+          type: 'group',
         };
       });
 
       // Root nodes
-      const rootNodes = nodes
+      const rootNodes: IElkLayoutNode[] = nodes
         .filter(node => !node.parentId)
         .map(node => ({
           id: node.id,
           width: node.size.width,
           height: node.size.height,
+          x: 0, // elk.js calculated x position
+          y: 0, // elk.js calculated y position
+          original: node,
+          type: 'node',
         }));
 
       // ALL edges at root level for cross-hierarchical support
-      const allEdges = edges.map(edge => ({
+      const allEdges: IElkLayoutEdge[] = edges.map(edge => ({
         id: edge.id,
         sources: [edge.source],
         targets: [edge.target],
+        original: edge,
       }));
 
       return {
@@ -128,21 +185,25 @@ export class ElkLayoutService {
       ? this.buildGroupHierarchy(groups, nodes, edges, options)
       : [];
 
-    const rootNodes = nodes
+    const rootNodes: IElkLayoutNode[] = nodes
       .filter(node => !node.parentId)
       .map(node => ({
         id: node.id,
         width: node.size.width,
         height: node.size.height,
+        x: 0, // elk.js calculated x position
+        y: 0, // elk.js calculated y position
+        original: node,
         type: 'node',
       }));
 
-    const rootEdges = enableGroups
+    const rootEdges: IElkLayoutEdge[] = enableGroups
       ? this.buildRootLevelEdges(nodes, edges)
       : edges.map(edge => ({
           id: edge.id,
           sources: [edge.source],
           targets: [edge.target],
+          original: edge,
         }));
 
     return {
@@ -162,21 +223,25 @@ export class ElkLayoutService {
     nodes: INode[],
     edges: IEdge[],
     options: IElkLayoutOptions
-  ): any[] {
+  ): IElkLayoutGroup[] {
     return groups.map(group => {
-      const children = nodes
+      const children: IElkLayoutNode[] = nodes
         .filter(node => node.parentId === group.id)
         .map(node => ({
           id: node.id,
           width: node.size.width,
           height: node.size.height,
+          x: 0, // elk.js calculated x position
+          y: 0, // elk.js calculated y position
+          original: node,
           type: 'node',
         }));
 
-      const groupEdges = edges
+      const groupEdges: IElkLayoutEdge[] = edges
         .filter(edge => {
           const sourceNode = nodes.find(n => n.id === edge.source);
           const targetNode = nodes.find(n => n.id === edge.target);
+
           return (
             sourceNode?.parentId === group.id &&
             targetNode?.parentId === group.id
@@ -186,14 +251,20 @@ export class ElkLayoutService {
           id: edge.id,
           sources: [edge.source],
           targets: [edge.target],
+          original: edge,
         }));
 
       return {
         id: group.id,
-        type: 'group',
+        height: 0, // elk.js calculated height
+        width: 0, // elk.js calculated width
+        x: 0, // elk.js calculated x position
+        y: 0, // elk.js calculated y position
         layoutOptions: this.buildGroupLayoutOptions(options),
         children,
         edges: groupEdges,
+        original: group,
+        type: 'group',
       };
     });
   }
@@ -202,11 +273,15 @@ export class ElkLayoutService {
    * Builds edges that connect nodes at different levels or groups
    * @private
    */
-  private buildRootLevelEdges(nodes: INode[], edges: IEdge[]): any[] {
+  private buildRootLevelEdges(
+    nodes: INode[],
+    edges: IEdge[]
+  ): IElkLayoutEdge[] {
     return edges
       .filter(edge => {
         const sourceNode = nodes.find(n => n.id === edge.source);
         const targetNode = nodes.find(n => n.id === edge.target);
+
         // Include edge if nodes are in different groups or at root level
         return (
           sourceNode?.parentId !== targetNode?.parentId ||
@@ -217,6 +292,7 @@ export class ElkLayoutService {
         id: edge.id,
         sources: [edge.source],
         targets: [edge.target],
+        original: edge,
       }));
   }
 
