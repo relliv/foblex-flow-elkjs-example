@@ -103,25 +103,52 @@ export class AppComponent implements OnInit {
 
   public elkLayout(): void {
     // Build hierarchical structure for ELK.js
-    const groups = this.foblexGroups().map(group => ({
-      id: group.id,
-      type: 'group',
-      layoutOptions: {
-        'elk.algorithm': 'layered',
-        'elk.padding': '[top=50,left=50,bottom=50,right=50]',
-        'elk.direction': 'RIGHT',
-        'elk.spacing.nodeNode': '50',
-      },
-      // Nest child nodes inside their parent groups
-      children: this.foblexNodes()
+    const groups = this.foblexGroups().map(group => {
+      const children = this.foblexNodes()
         .filter(node => node.parentId === group.id)
         .map(node => ({
           id: node.id,
           width: node.size.width,
           height: node.size.height,
           type: 'node',
-        })),
-    }));
+        }));
+
+      return {
+        id: group.id,
+        type: 'group',
+        layoutOptions: {
+          'elk.algorithm': 'layered',
+          'elk.padding': '[top=50,left=50,bottom=50,right=50]',
+          'elk.direction': 'RIGHT',
+          'elk.spacing.nodeNode': '50',
+          'elk.layered.spacing.nodeNodeBetweenLayers': '50',
+          'elk.spacing.componentComponent': '70',
+          // Let ELK calculate group size based on children
+          'elk.nodeSize.constraints': 'NODE_LABELS MINIMUM_SIZE',
+        },
+        // Nest child nodes inside their parent groups
+        children: children,
+        // Add edges between nodes within this group
+        edges: this.foblexEdges()
+          .filter(edge => {
+            const sourceNode = this.foblexNodes().find(
+              n => n.id === edge.source
+            );
+            const targetNode = this.foblexNodes().find(
+              n => n.id === edge.target
+            );
+            return (
+              sourceNode?.parentId === group.id &&
+              targetNode?.parentId === group.id
+            );
+          })
+          .map(edge => ({
+            id: edge.id,
+            sources: [edge.source],
+            targets: [edge.target],
+          })),
+      };
+    });
 
     // Root-level nodes (no parent)
     const rootNodes = this.foblexNodes()
@@ -133,6 +160,23 @@ export class AppComponent implements OnInit {
         type: 'node',
       }));
 
+    // Root-level edges (between groups and/or root nodes, excluding intra-group edges)
+    const rootEdges = this.foblexEdges()
+      .filter(edge => {
+        const sourceNode = this.foblexNodes().find(n => n.id === edge.source);
+        const targetNode = this.foblexNodes().find(n => n.id === edge.target);
+        // Include edge if nodes are in different groups or at root level
+        return (
+          sourceNode?.parentId !== targetNode?.parentId ||
+          (!sourceNode?.parentId && !targetNode?.parentId)
+        );
+      })
+      .map(edge => ({
+        id: edge.id,
+        sources: [edge.source],
+        targets: [edge.target],
+      }));
+
     const graph = {
       id: 'root',
       layoutOptions: {
@@ -140,15 +184,10 @@ export class AppComponent implements OnInit {
         'elk.direction': 'RIGHT',
         'elk.spacing.nodeNode': '80',
         'elk.layered.spacing.nodeNodeBetweenLayers': '80',
+        'elk.spacing.componentComponent': '100',
       },
       children: [...groups, ...rootNodes],
-      edges: [
-        ...this.foblexEdges().map(edge => ({
-          id: edge.id,
-          sources: [edge.source],
-          targets: [edge.target],
-        })),
-      ],
+      edges: rootEdges,
     };
 
     console.log('Input graph to ELK:', JSON.stringify(graph, null, 2));
@@ -170,30 +209,29 @@ export class AppComponent implements OnInit {
               width: group.width,
               height: group.height,
             },
-            position: {
-              x: group.x || 0,
-              y: group.y || 0,
-            },
+            position: PointExtensions.initialize(group.x || 0, group.y || 0),
           })) as IGroup[]
         );
 
         // Extract all nodes - both from groups and root level
         const allNodes: INode[] = [];
 
-        // Process nodes inside groups (positions are relative to group)
+        // Process nodes inside groups (positions need to include group position)
         groups.forEach((group: any) => {
           if (group.children) {
             group.children.forEach((node: any) => {
+              // Calculate absolute position by adding group position to node's relative position
+              const absoluteX = (group.x || 0) + (node.x || 0);
+              const absoluteY = (group.y || 0) + (node.y || 0);
+
               allNodes.push({
                 id: node.id,
                 size: {
                   width: node.width,
                   height: node.height,
                 },
-                position: {
-                  x: node.x || 0,
-                  y: node.y || 0,
-                },
+                // Position includes group position for absolute coordinates
+                position: PointExtensions.initialize(absoluteX, absoluteY),
                 parentId: group.id,
               });
             });
@@ -210,46 +248,12 @@ export class AppComponent implements OnInit {
               width: node.width,
               height: node.height,
             },
-            position: {
-              x: node.x || 0,
-              y: node.y || 0,
-            },
+            position: PointExtensions.initialize(node.x || 0, node.y || 0),
             parentId: null,
           });
         });
 
         this.elkNodes.set(allNodes);
-
-        timer(2000).subscribe(() => {
-          // Force update groups
-          this.fGroup.forEach(group => {
-            console.log('Group position:', group._position);
-            group._position = {
-              x: group.position().x,
-              y: group.position().y,
-            };
-            group.redraw();
-            group.refresh();
-          });
-
-          // Force update nodes
-          this.fNodes.forEach(node => {
-            console.log('Node position:', node._position);
-            node._position = {
-              x: node.position().x,
-              y: node.position().y,
-            };
-
-            // Call protected method using type assertion
-            (node as any).positionChanges();
-
-            node.redraw();
-            node.refresh();
-          });
-
-          // Redraw canvas
-          this.fCanvas.redraw();
-        });
 
         this.elkEdges.set(
           (result?.edges as any).map((edge: any) => ({
@@ -264,10 +268,15 @@ export class AppComponent implements OnInit {
         console.log('ELK Nodes:', this.elkNodes());
         console.log('ELK Edges:', this.elkEdges());
         console.log(
-          'Sample node positions:',
+          'Sample nodes with parent (absolute positions):',
           this.elkNodes()
+            .filter(n => n.parentId)
             .slice(0, 3)
-            .map(n => ({ id: n.id, pos: n.position }))
+            .map(n => ({
+              id: n.id,
+              parentId: n.parentId,
+              position: { x: n.position?.x, y: n.position?.y },
+            }))
         );
 
         timer(250).subscribe(() => {

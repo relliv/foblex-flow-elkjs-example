@@ -121,6 +121,12 @@ The template (`src/app/app.component.html`) uses nested @for loops:
 - Group sizing: Groups do not specify width/height, allowing ELK to calculate based on children
 - Padding: Groups have 50px padding on all sides for visual spacing
 - **Child positioning**: Node positions inside groups are relative to the group's origin
+- **Group sub-node layouting**: Each group has its own layout algorithm
+  - Groups run layered layout on their children
+  - Intra-group edges are kept within the group's edge list
+  - Inter-group edges are placed at the root level
+  - 50px spacing between nodes within groups
+  - 70px spacing between disconnected components within groups
 
 ## Development Patterns
 
