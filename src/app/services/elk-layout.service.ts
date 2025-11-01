@@ -448,11 +448,7 @@ export class ElkLayoutService {
             const absoluteY = groupY + (child.y || 0);
 
             nodes.push({
-              id: child.id,
-              size: {
-                width: child.width,
-                height: child.height,
-              },
+              ...child.original,
               position: PointExtensions.initialize(absoluteX, absoluteY),
               parentId: group.id,
             });
@@ -468,7 +464,7 @@ export class ElkLayoutService {
         if (child.children || child.type === 'group') {
           // It's a group
           groups.push({
-            id: child.id,
+            ...child.original,
             size: {
               width: child.width,
               height: child.height,
@@ -481,13 +477,8 @@ export class ElkLayoutService {
         } else {
           // It's a root-level node
           nodes.push({
-            id: child.id,
-            size: {
-              width: child.width,
-              height: child.height,
-            },
+            ...child.original,
             position: PointExtensions.initialize(child.x || 0, child.y || 0),
-            parentId: null,
           });
         }
       });
@@ -496,11 +487,9 @@ export class ElkLayoutService {
     // Extract all edges from root level (they should all be at root with INCLUDE_CHILDREN)
     (result?.edges || []).forEach((edge: any) => {
       edges.push({
-        id: edge.id,
+        ...edge.original,
         source: edge.sources[0],
         target: edge.targets[0],
-        sourceHandle: edge.sources[0],
-        targetHandle: edge.targets[0],
       });
     });
 
@@ -512,11 +501,9 @@ export class ElkLayoutService {
             // Check if this edge isn't already added
             if (!edges.find(e => e.id === edge.id)) {
               edges.push({
-                id: edge.id,
+                ...edge.original,
                 source: edge.sources[0],
                 target: edge.targets[0],
-                sourceHandle: edge.sources[0],
-                targetHandle: edge.targets[0],
               });
             }
           });
