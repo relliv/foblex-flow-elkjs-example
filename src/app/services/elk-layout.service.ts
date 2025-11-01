@@ -52,33 +52,14 @@ export class ElkLayoutService {
     const layoutOptions = { ...this.defaultOptions, ...options };
     const graph = this.buildElkGraph(input, layoutOptions);
 
-    // Debug logging for hierarchical layouts
-    if (input.enableGroups && layoutOptions.algorithm === 'layered') {
-      console.log('Hierarchical layout input:', {
-        groups: input.groups.length,
-        nodes: input.nodes.length,
-        edges: input.edges.length,
-        nodesInGroups: input.nodes.filter(n => n.parentId).length,
-        rootNodes: input.nodes.filter(n => !n.parentId).length,
-      });
-    }
-
     try {
       const result = await this.elk.layout(graph);
       const output = this.extractLayoutResults(result);
 
-      // Debug logging for output
-      if (input.enableGroups && layoutOptions.algorithm === 'layered') {
-        console.log('Hierarchical layout output:', {
-          groups: output.groups.length,
-          nodes: output.nodes.length,
-          edges: output.edges.length,
-        });
-      }
-
       return output;
     } catch (error) {
       console.error('ELK layout error:', error);
+
       throw error;
     }
   }
