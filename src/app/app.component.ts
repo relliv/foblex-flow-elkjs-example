@@ -239,6 +239,10 @@ export class AppComponent implements OnInit {
               x: node.position().x,
               y: node.position().y,
             };
+
+            // Call protected method using type assertion
+            (node as any).positionChanges();
+
             node.redraw();
             node.refresh();
           });
