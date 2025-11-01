@@ -52,9 +52,31 @@ export class ElkLayoutService {
     const layoutOptions = { ...this.defaultOptions, ...options };
     const graph = this.buildElkGraph(input, layoutOptions);
 
+    // Debug logging for hierarchical layouts
+    if (input.enableGroups && layoutOptions.algorithm === 'layered') {
+      console.log('Hierarchical layout input:', {
+        groups: input.groups.length,
+        nodes: input.nodes.length,
+        edges: input.edges.length,
+        nodesInGroups: input.nodes.filter(n => n.parentId).length,
+        rootNodes: input.nodes.filter(n => !n.parentId).length,
+      });
+    }
+
     try {
       const result = await this.elk.layout(graph);
-      return this.extractLayoutResults(result, input.enableGroups);
+      const output = this.extractLayoutResults(result, input.enableGroups);
+
+      // Debug logging for output
+      if (input.enableGroups && layoutOptions.algorithm === 'layered') {
+        console.log('Hierarchical layout output:', {
+          groups: output.groups.length,
+          nodes: output.nodes.length,
+          edges: output.edges.length,
+        });
+      }
+
+      return output;
     } catch (error) {
       console.error('ELK layout error:', error);
       throw error;
@@ -359,57 +381,65 @@ export class ElkLayoutService {
     const nodes: INode[] = [];
     const edges: IEdge[] = [];
 
-    // Extract groups
-    if (enableGroups) {
-      const elkGroups =
-        result?.children?.filter((node: any) => node.type === 'group') || [];
+    // Helper function to recursively extract nodes from groups
+    const extractNodesFromGroup = (group: any, parentOffset = { x: 0, y: 0 }) => {
+      const groupX = parentOffset.x + (group.x || 0);
+      const groupY = parentOffset.y + (group.y || 0);
 
-      elkGroups.forEach((group: any) => {
-        groups.push({
-          id: group.id,
-          size: {
-            width: group.width,
-            height: group.height,
-          },
-          position: PointExtensions.initialize(group.x || 0, group.y || 0),
-        });
-
-        // Extract nodes from within groups (convert to absolute positions)
-        if (group.children) {
-          group.children.forEach((node: any) => {
-            const absoluteX = (group.x || 0) + (node.x || 0);
-            const absoluteY = (group.y || 0) + (node.y || 0);
+      if (group.children) {
+        group.children.forEach((child: any) => {
+          // Check if child is a node (not a nested group)
+          if (!child.children || child.type === 'node') {
+            const absoluteX = groupX + (child.x || 0);
+            const absoluteY = groupY + (child.y || 0);
 
             nodes.push({
-              id: node.id,
+              id: child.id,
               size: {
-                width: node.width,
-                height: node.height,
+                width: child.width,
+                height: child.height,
               },
               position: PointExtensions.initialize(absoluteX, absoluteY),
               parentId: group.id,
             });
+          }
+        });
+      }
+    };
+
+    // Process all children from result
+    if (result?.children) {
+      result.children.forEach((child: any) => {
+        // Check if it's a group (has children or explicitly marked as group)
+        if (child.children || child.type === 'group') {
+          // It's a group
+          groups.push({
+            id: child.id,
+            size: {
+              width: child.width,
+              height: child.height,
+            },
+            position: PointExtensions.initialize(child.x || 0, child.y || 0),
+          });
+
+          // Extract nodes from this group
+          extractNodesFromGroup(child);
+        } else {
+          // It's a root-level node
+          nodes.push({
+            id: child.id,
+            size: {
+              width: child.width,
+              height: child.height,
+            },
+            position: PointExtensions.initialize(child.x || 0, child.y || 0),
+            parentId: null,
           });
         }
       });
     }
 
-    // Extract root-level nodes
-    const rootNodes =
-      result?.children?.filter((node: any) => node.type === 'node') || [];
-    rootNodes.forEach((node: any) => {
-      nodes.push({
-        id: node.id,
-        size: {
-          width: node.width,
-          height: node.height,
-        },
-        position: PointExtensions.initialize(node.x || 0, node.y || 0),
-        parentId: null,
-      });
-    });
-
-    // Extract edges
+    // Extract all edges from root level (they should all be at root with INCLUDE_CHILDREN)
     (result?.edges || []).forEach((edge: any) => {
       edges.push({
         id: edge.id,
@@ -419,6 +449,26 @@ export class ElkLayoutService {
         targetHandle: edge.targets[0],
       });
     });
+
+    // Also check for edges in groups (in case some are nested despite INCLUDE_CHILDREN)
+    if (result?.children) {
+      result.children.forEach((child: any) => {
+        if ((child.children || child.type === 'group') && child.edges) {
+          child.edges.forEach((edge: any) => {
+            // Check if this edge isn't already added
+            if (!edges.find(e => e.id === edge.id)) {
+              edges.push({
+                id: edge.id,
+                source: edge.sources[0],
+                target: edge.targets[0],
+                sourceHandle: edge.sources[0],
+                targetHandle: edge.targets[0],
+              });
+            }
+          });
+        }
+      });
+    }
 
     return { groups, nodes, edges };
   }
