@@ -13,6 +13,65 @@
   }
 }
 
+.layout-controls {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background-color: var(--node-background-color);
+  padding: 16px;
+  border-radius: 4px;
+  border: 0.2px solid var(--node-border-color);
+  box-shadow: var(--node-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1000;
+  min-width: 280px;
+
+  .control-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--node-color);
+      margin: 0;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    select {
+      flex: 1;
+      padding: 6px 12px;
+      border: 0.2px solid var(--node-border-color);
+      border-radius: 3px;
+      background-color: var(--node-background-color);
+      color: var(--node-color);
+      font-size: 14px;
+      cursor: pointer;
+      outline: none;
+      min-width: 150px;
+
+      &:hover:not(:disabled) {
+        border-color: var(--node-selected-border-color);
+      }
+
+      &:focus {
+        border-color: var(--node-selected-border-color);
+        box-shadow: 0 0 0 2px rgba(52, 81, 178, 0.1);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
 .f-node,
 .f-group {
   position: relative;

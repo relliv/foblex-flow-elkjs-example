@@ -67,4 +67,31 @@
   <div class="any-container-or-without-container">
     <f-minimap [fMinSize]="2000"></f-minimap>
   </div>
+
+  <div class="layout-controls">
+    <div class="control-group">
+      <label for="algorithm">Layout Algorithm:</label>
+      <select
+        id="algorithm"
+        [value]="selectedAlgorithm()"
+        (change)="onAlgorithmChange($event)">
+        @for (option of algorithmOptions; track option.value) {
+          <option [value]="option.value">{{ option.label }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label for="direction">Direction:</label>
+      <select
+        id="direction"
+        [value]="selectedDirection()"
+        (change)="onDirectionChange($event)"
+        [disabled]="selectedAlgorithm() === 'force' || selectedAlgorithm() === 'stress'">
+        @for (option of directionOptions; track option.value) {
+          <option [value]="option.value">{{ option.label }}</option>
+        }
+      </select>
+    </div>
+  </div>
 </f-flow>

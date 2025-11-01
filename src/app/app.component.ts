@@ -60,6 +60,24 @@ export class AppComponent implements OnInit {
   private baseStrokeWidth = 2; // Base stroke width in pixels
   private currentZoomScale = 1; // Current zoom scale
 
+  // Layout direction
+  public selectedDirection = signal<'RIGHT' | 'DOWN' | 'LEFT' | 'UP'>('DOWN');
+  public directionOptions = [
+    { value: 'RIGHT', label: 'Left to Right' },
+    { value: 'DOWN', label: 'Top to Bottom' },
+    { value: 'LEFT', label: 'Right to Left' },
+    { value: 'UP', label: 'Bottom to Top' },
+  ] as const;
+
+  // Layout algorithm
+  public selectedAlgorithm = signal<'layered' | 'force' | 'stress' | 'mrtree'>('layered');
+  public algorithmOptions = [
+    { value: 'layered', label: 'Layered (Hierarchical)' },
+    { value: 'force', label: 'Force-Directed (Organic)' },
+    { value: 'stress', label: 'Stress (Minimized Edge Length)' },
+    { value: 'mrtree', label: 'Tree (MR-Tree)' },
+  ] as const;
+
   public ngOnInit(): void {
     if (this.enableGroups) {
       this.createGroups(this.groupCount);
@@ -110,12 +128,18 @@ export class AppComponent implements OnInit {
    */
   public async elkLayout(): Promise<void> {
     try {
-      const layoutResult = await this.elkLayoutService.calculateLayout({
-        groups: this.foblexGroups(),
-        nodes: this.foblexNodes(),
-        edges: this.foblexEdges(),
-        enableGroups: this.enableGroups,
-      });
+      const layoutResult = await this.elkLayoutService.calculateLayout(
+        {
+          groups: this.foblexGroups(),
+          nodes: this.foblexNodes(),
+          edges: this.foblexEdges(),
+          enableGroups: this.enableGroups,
+        },
+        {
+          algorithm: this.selectedAlgorithm(),
+          direction: this.selectedDirection(),
+        }
+      );
 
       // Update signals with calculated positions
       this.elkGroups.set(layoutResult.groups);
@@ -134,6 +158,26 @@ export class AppComponent implements OnInit {
     } catch (error) {
       console.error('Layout calculation failed:', error);
     }
+  }
+
+  /**
+   * Handles direction change from UI
+   */
+  public onDirectionChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const direction = target.value as 'RIGHT' | 'DOWN' | 'LEFT' | 'UP';
+    this.selectedDirection.set(direction);
+    this.elkLayout();
+  }
+
+  /**
+   * Handles algorithm change from UI
+   */
+  public onAlgorithmChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const algorithm = target.value as 'layered' | 'force' | 'stress' | 'mrtree';
+    this.selectedAlgorithm.set(algorithm);
+    this.elkLayout();
   }
 
   // #endregion
