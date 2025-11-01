@@ -71,12 +71,63 @@ export class ElkLayoutService {
   ): any {
     const { groups, nodes, edges, enableGroups } = input;
 
-    // Build hierarchical group structure (if enabled)
+    // For layered algorithm with groups, use INCLUDE_CHILDREN for proper cross-hierarchical edges
+    if (enableGroups && options.algorithm === 'layered') {
+      // Build groups with hierarchy handling
+      const elkGroups = groups.map(group => {
+        const groupChildren = nodes
+          .filter(n => n.parentId === group.id)
+          .map(n => ({
+            id: n.id,
+            width: n.size.width,
+            height: n.size.height,
+          }));
+
+        return {
+          id: group.id,
+          // Set INCLUDE_CHILDREN on groups to include them in single layout run
+          layoutOptions: {
+            'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
+            'elk.padding': '[top=60,left=60,bottom=60,right=60]',
+          },
+          children: groupChildren,
+          edges: [], // Edges will be at root level
+        };
+      });
+
+      // Root nodes
+      const rootNodes = nodes
+        .filter(node => !node.parentId)
+        .map(node => ({
+          id: node.id,
+          width: node.size.width,
+          height: node.size.height,
+        }));
+
+      // ALL edges at root level for cross-hierarchical support
+      const allEdges = edges.map(edge => ({
+        id: edge.id,
+        sources: [edge.source],
+        targets: [edge.target],
+      }));
+
+      return {
+        id: 'root',
+        layoutOptions: {
+          ...this.buildRootLayoutOptions(options),
+          // Critical: Set INCLUDE_CHILDREN on root to layout entire hierarchy in one run
+          'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
+        },
+        children: [...elkGroups, ...rootNodes],
+        edges: allEdges,
+      };
+    }
+
+    // Original logic for other algorithms
     const elkGroups = enableGroups
       ? this.buildGroupHierarchy(groups, nodes, edges, options)
       : [];
 
-    // Build root-level nodes
     const rootNodes = nodes
       .filter(node => !node.parentId)
       .map(node => ({
@@ -86,7 +137,6 @@ export class ElkLayoutService {
         type: 'node',
       }));
 
-    // Build root-level edges
     const rootEdges = enableGroups
       ? this.buildRootLevelEdges(nodes, edges)
       : edges.map(edge => ({
