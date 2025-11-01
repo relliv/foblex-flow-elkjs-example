@@ -1,5 +1,6 @@
 import {
   Component,
+  inject,
   OnInit,
   QueryList,
   signal,
@@ -14,34 +15,12 @@ import {
   FNodeBase,
   FNodeDirective,
 } from '@foblex/flow';
-import { IPoint, ISize, PointExtensions } from '@foblex/2d';
+import { PointExtensions } from '@foblex/2d';
 import { v4 as uuidv4 } from 'uuid';
-import ELK from 'elkjs/lib/elk.bundled.js';
 import { timer } from 'rxjs';
 import { faker } from '@faker-js/faker';
-
-const elk = new ELK();
-
-interface IGroup {
-  id: string;
-  size: ISize;
-  position?: IPoint;
-}
-
-interface INode {
-  id: string;
-  size: ISize;
-  position?: IPoint;
-  parentId: string | null;
-}
-
-interface IEdge {
-  id: string;
-  source: string;
-  target: string;
-  sourceHandle: string;
-  targetHandle: string;
-}
+import { IEdge, IGroup, INode } from './models/graph.interface';
+import { ElkLayoutService } from './services/elk-layout.service';
 
 @Component({
   selector: 'app-root',
@@ -50,6 +29,9 @@ interface IEdge {
   styleUrl: './app.component.scss',
 })
 export class AppComponent implements OnInit {
+  // Dependency injection
+  private readonly elkLayoutService = inject(ElkLayoutService);
+
   @ViewChild(FCanvasComponent, { static: true })
   public fCanvas!: FCanvasComponent;
 
@@ -131,250 +113,38 @@ export class AppComponent implements OnInit {
 
   // #endregion
 
-  // #region Elk Methods
+  // #region Layout Methods
 
-  public elkLayout(): void {
-    // Build hierarchical structure for ELK.js (only if groups enabled)
-    const groups = this.enableGroups
-      ? this.foblexGroups().map(group => {
-          const children = this.foblexNodes()
-            .filter(node => node.parentId === group.id)
-            .map(node => ({
-              id: node.id,
-              width: node.size.width,
-              height: node.size.height,
-              type: 'node',
-            }));
+  /**
+   * Performs graph layout using ELK.js service
+   * Delegates complex layout logic to the ElkLayoutService
+   */
+  public async elkLayout(): Promise<void> {
+    try {
+      const layoutResult = await this.elkLayoutService.calculateLayout({
+        groups: this.foblexGroups(),
+        nodes: this.foblexNodes(),
+        edges: this.foblexEdges(),
+        enableGroups: this.enableGroups,
+      });
 
-          return {
-            id: group.id,
-            type: 'group',
-            layoutOptions: {
-              // Core algorithm
-              'elk.algorithm': 'layered',
-              'elk.direction': 'RIGHT',
+      // Update signals with calculated positions
+      this.elkGroups.set(layoutResult.groups);
+      this.elkNodes.set(layoutResult.nodes);
+      this.elkEdges.set(layoutResult.edges);
 
-              // Padding
-              'elk.padding': '[top=50,left=50,bottom=50,right=50]',
+      // Fit canvas to screen after layout
+      timer(250).subscribe(() => {
+        this.fCanvas.fitToScreen(PointExtensions.initialize(100, 100), false);
 
-              // Node spacing
-              'elk.spacing.nodeNode': '50',
-              'elk.layered.spacing.nodeNodeBetweenLayers': '50',
-              'elk.spacing.componentComponent': '70',
-
-              // Node sizing
-              'elk.nodeSize.constraints': 'NODE_LABELS MINIMUM_SIZE',
-
-              // Layered algorithm specific options
-              'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
-              'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
-              'elk.layered.cycleBreaking.strategy': 'GREEDY',
-              'elk.layered.layering.strategy': 'NETWORK_SIMPLEX',
-
-              // Edge routing
-              'elk.edgeRouting': 'ORTHOGONAL',
-              'elk.layered.edgeRouting.selfLoopPlacement': 'NORTH_STACKED',
-
-              // Port constraints
-              'elk.portConstraints': 'FIXED_SIDE',
-
-              // Hierarchy handling
-              'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
-
-              // Consider model order for better stability
-              'elk.considerModelOrder.strategy': 'NODES_AND_EDGES',
-            },
-            // Nest child nodes inside their parent groups
-            children: children,
-            // Add edges between nodes within this group
-            edges: this.foblexEdges()
-              .filter(edge => {
-                const sourceNode = this.foblexNodes().find(
-                  n => n.id === edge.source
-                );
-                const targetNode = this.foblexNodes().find(
-                  n => n.id === edge.target
-                );
-                return (
-                  sourceNode?.parentId === group.id &&
-                  targetNode?.parentId === group.id
-                );
-              })
-              .map(edge => ({
-                id: edge.id,
-                sources: [edge.source],
-                targets: [edge.target],
-              })),
-          };
-        })
-      : [];
-
-    // Root-level nodes (no parent)
-    const rootNodes = this.foblexNodes()
-      .filter(node => !node.parentId)
-      .map(node => ({
-        id: node.id,
-        width: node.size.width,
-        height: node.size.height,
-        type: 'node',
-      }));
-
-    // Root-level edges
-    const rootEdges = this.enableGroups
-      ? this.foblexEdges()
-          .filter(edge => {
-            const sourceNode = this.foblexNodes().find(
-              n => n.id === edge.source
-            );
-            const targetNode = this.foblexNodes().find(
-              n => n.id === edge.target
-            );
-            // Include edge if nodes are in different groups or at root level
-            return (
-              sourceNode?.parentId !== targetNode?.parentId ||
-              (!sourceNode?.parentId && !targetNode?.parentId)
-            );
-          })
-          .map(edge => ({
-            id: edge.id,
-            sources: [edge.source],
-            targets: [edge.target],
-          }))
-      : this.foblexEdges().map(edge => ({
-          id: edge.id,
-          sources: [edge.source],
-          targets: [edge.target],
-        }));
-
-    const graph = {
-      id: 'root',
-      layoutOptions: {
-        // Core algorithm
-        'elk.algorithm': 'layered',
-        'elk.direction': 'RIGHT',
-
-        // Spacing
-        'elk.spacing.nodeNode': '80',
-        'elk.layered.spacing.nodeNodeBetweenLayers': '80',
-        'elk.spacing.componentComponent': '100',
-        'elk.spacing.edgeNode': '40',
-        'elk.spacing.edgeEdge': '20',
-
-        // Layered algorithm options
-        'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
-        'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
-        'elk.layered.cycleBreaking.strategy': 'GREEDY',
-        'elk.layered.layering.strategy': 'NETWORK_SIMPLEX',
-        'elk.layered.thoroughness': '10',
-
-        // Edge routing
-        'elk.edgeRouting': 'ORTHOGONAL',
-        'elk.layered.edgeRouting.selfLoopPlacement': 'NORTH_STACKED',
-
-        // Separate connected components
-        'elk.separateConnectedComponents': 'true',
-
-        // Port constraints
-        'elk.portConstraints': 'FIXED_SIDE',
-
-        // Hierarchy handling
-        'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
-
-        // Consider model order
-        'elk.considerModelOrder.strategy': 'NODES_AND_EDGES',
-
-        // Interactive mode for better incremental layout
-        'elk.interactiveLayout': 'true',
-      },
-      children: [...groups, ...rootNodes],
-      edges: rootEdges,
-    };
-
-    elk
-      .layout(graph)
-      .then(result => {
-        // Extract groups from result (only if groups enabled)
-        const groups = this.enableGroups
-          ? (result?.children?.filter(
-              (node: any) => node.type === 'group'
-            ) as any) || []
-          : [];
-
-        if (this.enableGroups) {
-          this.elkGroups.set(
-            groups.map((group: any) => ({
-              id: group.id,
-              size: {
-                width: group.width,
-                height: group.height,
-              },
-              position: PointExtensions.initialize(group.x || 0, group.y || 0),
-            })) as IGroup[]
-          );
-        }
-
-        // Extract all nodes - both from groups and root level
-        const allNodes: INode[] = [];
-
-        // Process nodes inside groups (only if groups enabled)
-        if (this.enableGroups) {
-          groups.forEach((group: any) => {
-            if (group.children) {
-              group.children.forEach((node: any) => {
-                // Calculate absolute position by adding group position to node's relative position
-                const absoluteX = (group.x || 0) + (node.x || 0);
-                const absoluteY = (group.y || 0) + (node.y || 0);
-
-                allNodes.push({
-                  id: node.id,
-                  size: {
-                    width: node.width,
-                    height: node.height,
-                  },
-                  // Position includes group position for absolute coordinates
-                  position: PointExtensions.initialize(absoluteX, absoluteY),
-                  parentId: group.id,
-                });
-              });
-            }
-          });
-        }
-
-        // Process root-level nodes (positions are absolute)
-        const rootNodes =
-          result?.children?.filter((node: any) => node.type === 'node') || [];
-        rootNodes.forEach((node: any) => {
-          allNodes.push({
-            id: node.id,
-            size: {
-              width: node.width,
-              height: node.height,
-            },
-            position: PointExtensions.initialize(node.x || 0, node.y || 0),
-            parentId: null,
-          });
+        // Apply initial stroke compensation after layout
+        timer(100).subscribe(() => {
+          this.updateStrokeCompensation();
         });
-
-        this.elkNodes.set(allNodes);
-
-        this.elkEdges.set(
-          (result?.edges as any).map((edge: any) => ({
-            id: edge.id,
-            source: edge.sources[0],
-            target: edge.targets[0],
-          })) as IEdge[]
-        );
-
-        timer(250).subscribe(() => {
-          this.fCanvas.fitToScreen(PointExtensions.initialize(100, 100), false);
-
-          // Apply initial stroke compensation after layout
-          timer(100).subscribe(() => {
-            this.updateStrokeCompensation();
-          });
-        });
-      })
-      .catch(console.error);
+      });
+    } catch (error) {
+      console.error('Layout calculation failed:', error);
+    }
   }
 
   // #endregion
