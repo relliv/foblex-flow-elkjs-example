@@ -1,5 +1,18 @@
 @use "./common";
 
+::ng-deep f-flow {
+  @include common.connection;
+  @include common.minimap;
+
+  .custom-class-for-minimap {
+    fill: var(--connection-gradient-1) !important;
+
+    &.f-selected {
+      fill: var(--minimap-node-selected-color) !important;
+    }
+  }
+}
+
 .f-node,
 .f-group {
   position: relative;

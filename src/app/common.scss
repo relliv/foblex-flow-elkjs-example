@@ -19,7 +19,7 @@
   --outlet-color: #3451b2;
   --input-output-color: rgba(60, 60, 67, 0.78);
 
-  --minimap-background-color: #ffffff;
+  --minimap-background-color: #efecec;
   --minimap-node-color: rgba(60, 60, 67);
   --minimap-node-selected-color: #3451b2;
   --minimap-view-color: rgba(100, 108, 255, 0.14);
@@ -131,6 +131,8 @@
     right: 16px;
     width: 120px;
     height: 120px;
+    border-radius: 2px;
+    border: 1px solid gray !important;
 
     .f-minimap-node {
       fill: var(--minimap-node-color);
