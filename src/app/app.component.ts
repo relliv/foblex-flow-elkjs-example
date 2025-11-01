@@ -70,7 +70,9 @@ export class AppComponent implements OnInit {
   ] as const;
 
   // Layout algorithm
-  public selectedAlgorithm = signal<'layered' | 'force' | 'stress' | 'mrtree'>('layered');
+  public selectedAlgorithm = signal<'layered' | 'force' | 'stress' | 'mrtree'>(
+    'layered'
+  );
   public algorithmOptions = [
     { value: 'layered', label: 'Layered (Hierarchical)' },
     { value: 'force', label: 'Force-Directed (Organic)' },
@@ -79,11 +81,14 @@ export class AppComponent implements OnInit {
   ] as const;
 
   public ngOnInit(): void {
+    // Always create some default root nodes at the beginning
+    this.createRootNodes(10); // Create 10 default root-level nodes
+
     if (this.enableGroups) {
       this.createGroups(this.groupCount);
     } else {
-      // Create root-level nodes only
-      this.createRootNodes(50); // Create 50 root-level nodes
+      // Create additional root-level nodes when groups are disabled
+      this.createRootNodes(40); // Create 40 more root-level nodes
     }
 
     this.foblexEdges.set(
@@ -203,17 +208,13 @@ export class AppComponent implements OnInit {
       ]);
     });
 
-    // Create some root-level nodes (no parent)
-    this.foblexNodes.update(nodes => [
-      ...nodes,
-      ...this.createNodesForGroup(null),
-    ]);
+    // Root-level nodes are now created in ngOnInit before this method is called
 
     return groups;
   }
 
   private createRootNodes(count: number): void {
-    const nodes = Array.from({ length: count }).map(() => {
+    const newNodes = Array.from({ length: count }).map(() => {
       const size = {
         width: faker.number.int({ min: 100, max: 350 }),
         height: faker.number.int({ min: 100, max: 350 }),
@@ -227,7 +228,8 @@ export class AppComponent implements OnInit {
       };
     });
 
-    this.foblexNodes.set(nodes);
+    // Append to existing nodes instead of replacing
+    this.foblexNodes.update(nodes => [...nodes, ...newNodes]);
   }
 
   private createNodesForGroup(parentId: string | null): INode[] {
