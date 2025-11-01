@@ -235,12 +235,36 @@ Benefits:
 
 ### Modifying Node/Group Generation
 
+#### Enabling/Disabling Groups
+
+Groups are optional and can be toggled with the `enableGroups` flag:
+
+```typescript
+// In app.component.ts
+private enableGroups = true;  // Set to false to disable groups
+private groupCount = 20;      // Number of groups when enabled
+```
+
+**With Groups Enabled** (`enableGroups = true`):
+- Creates specified number of groups
+- Each group gets 3-10 child nodes
+- Additional root-level nodes created
+- Hierarchical layout with group nesting
+
+**With Groups Disabled** (`enableGroups = false`):
+- Creates 50 root-level nodes only
+- No hierarchical nesting
+- Flat graph layout
+- All edges at root level
+
+#### Configuration Details
+
 - Group dimensions: Start at 200x200 minimum, automatically expanded by ELK.js based on child nodes
-- Group padding: `src/app/app.component.ts:92` (currently 50px on all sides)
-- Node dimensions: `src/app/app.component.ts:239-242` (random 100-350px)
+- Group padding: 50px on all sides
+- Node dimensions: random 100-350px width/height
 - **Node assignment**: Each group gets its own dedicated nodes (parentId matches group)
-- Node count per group: `src/app/app.component.ts:236` (random 3-10 per group)
-- Root-level nodes: Additional nodes created with no parent (line 230)
+- Node count per group: random 3-10 per group
+- Root-level nodes: When groups enabled, additional nodes created with no parent
 
 ### Styling
 

@@ -71,8 +71,18 @@ export class AppComponent implements OnInit {
   public foblexNodes = signal<INode[]>([]);
   public foblexEdges = signal<IEdge[]>([]);
 
+  // Configuration
+  private enableGroups = true; // Set to false to disable groups
+  private groupCount = 20; // Number of groups to create
+
   public ngOnInit(): void {
-    this.createGroups(20);
+    if (this.enableGroups) {
+      this.createGroups(this.groupCount);
+    } else {
+      // Create root-level nodes only
+      this.createRootNodes(50); // Create 50 root-level nodes
+    }
+
     this.foblexEdges.set(
       this.createRandomWiredEdges(
         this.foblexNodes(),
@@ -102,8 +112,8 @@ export class AppComponent implements OnInit {
   // #region Elk Methods
 
   public elkLayout(): void {
-    // Build hierarchical structure for ELK.js
-    const groups = this.foblexGroups().map(group => {
+    // Build hierarchical structure for ELK.js (only if groups enabled)
+    const groups = this.enableGroups ? this.foblexGroups().map(group => {
       const children = this.foblexNodes()
         .filter(node => node.parentId === group.id)
         .map(node => ({
@@ -173,7 +183,7 @@ export class AppComponent implements OnInit {
             targets: [edge.target],
           })),
       };
-    });
+    }) : [];
 
     // Root-level nodes (no parent)
     const rootNodes = this.foblexNodes()
@@ -185,8 +195,8 @@ export class AppComponent implements OnInit {
         type: 'node',
       }));
 
-    // Root-level edges (between groups and/or root nodes, excluding intra-group edges)
-    const rootEdges = this.foblexEdges()
+    // Root-level edges
+    const rootEdges = this.enableGroups ? this.foblexEdges()
       .filter(edge => {
         const sourceNode = this.foblexNodes().find(n => n.id === edge.source);
         const targetNode = this.foblexNodes().find(n => n.id === edge.target);
@@ -197,6 +207,11 @@ export class AppComponent implements OnInit {
         );
       })
       .map(edge => ({
+        id: edge.id,
+        sources: [edge.source],
+        targets: [edge.target],
+      }))
+    : this.foblexEdges().map(edge => ({
         id: edge.id,
         sources: [edge.source],
         targets: [edge.target],
@@ -252,47 +267,52 @@ export class AppComponent implements OnInit {
       .layout(graph)
       .then(result => {
         console.log('ELK Result:', JSON.stringify(result, null, 2));
-        // Extract groups from result
-        const groups =
-          (result?.children?.filter(
-            (node: any) => node.type === 'group'
-          ) as any) || [];
+        // Extract groups from result (only if groups enabled)
+        const groups = this.enableGroups
+          ? ((result?.children?.filter(
+              (node: any) => node.type === 'group'
+            ) as any) || [])
+          : [];
 
-        this.elkGroups.set(
-          groups.map((group: any) => ({
-            id: group.id,
-            size: {
-              width: group.width,
-              height: group.height,
-            },
-            position: PointExtensions.initialize(group.x || 0, group.y || 0),
-          })) as IGroup[]
-        );
+        if (this.enableGroups) {
+          this.elkGroups.set(
+            groups.map((group: any) => ({
+              id: group.id,
+              size: {
+                width: group.width,
+                height: group.height,
+              },
+              position: PointExtensions.initialize(group.x || 0, group.y || 0),
+            })) as IGroup[]
+          );
+        }
 
         // Extract all nodes - both from groups and root level
         const allNodes: INode[] = [];
 
-        // Process nodes inside groups (positions need to include group position)
-        groups.forEach((group: any) => {
-          if (group.children) {
-            group.children.forEach((node: any) => {
-              // Calculate absolute position by adding group position to node's relative position
-              const absoluteX = (group.x || 0) + (node.x || 0);
-              const absoluteY = (group.y || 0) + (node.y || 0);
+        // Process nodes inside groups (only if groups enabled)
+        if (this.enableGroups) {
+          groups.forEach((group: any) => {
+            if (group.children) {
+              group.children.forEach((node: any) => {
+                // Calculate absolute position by adding group position to node's relative position
+                const absoluteX = (group.x || 0) + (node.x || 0);
+                const absoluteY = (group.y || 0) + (node.y || 0);
 
-              allNodes.push({
-                id: node.id,
-                size: {
-                  width: node.width,
-                  height: node.height,
-                },
-                // Position includes group position for absolute coordinates
-                position: PointExtensions.initialize(absoluteX, absoluteY),
-                parentId: group.id,
+                allNodes.push({
+                  id: node.id,
+                  size: {
+                    width: node.width,
+                    height: node.height,
+                  },
+                  // Position includes group position for absolute coordinates
+                  position: PointExtensions.initialize(absoluteX, absoluteY),
+                  parentId: group.id,
+                });
               });
-            });
-          }
-        });
+            }
+          });
+        }
 
         // Process root-level nodes (positions are absolute)
         const rootNodes =
@@ -372,6 +392,24 @@ export class AppComponent implements OnInit {
     ]);
 
     return groups;
+  }
+
+  private createRootNodes(count: number): void {
+    const nodes = Array.from({ length: count }).map(() => {
+      const size = {
+        width: faker.number.int({ min: 100, max: 350 }),
+        height: faker.number.int({ min: 100, max: 350 }),
+      };
+
+      return {
+        id: uuidv4(),
+        size,
+        position: PointExtensions.initialize(0, 0), // Initial position before layout
+        parentId: null, // No parent - root level
+      };
+    });
+
+    this.foblexNodes.set(nodes);
   }
 
   private createNodesForGroup(parentId: string | null): INode[] {
