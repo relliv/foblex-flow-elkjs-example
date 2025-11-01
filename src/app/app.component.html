@@ -17,7 +17,7 @@
         fGroup
         fDragHandle
         [fGroupId]="group.id"
-        [fGroupPosition]="group.position || { x: 0, y: 0 }"
+        [fGroupPosition]="group.position!"
         [fGroupDraggingDisabled]="false"
         [fGroupSize]="group.size">
         Group {{ $index + 1 }}
@@ -30,7 +30,7 @@
         fNode
         fDragHandle
         [fNodeId]="node.id"
-        [fNodePosition]="node.position || { x: 0, y: 0 }"
+        [fNodePosition]="node.position!"
         [fNodeDraggingDisabled]="false"
         [fNodeSize]="node.size"
         [fNodeParentId]="node.parentId">
@@ -41,21 +41,21 @@
           fNodeInput
           fInputConnectableSide="calculate_horizontal"
           [fInputId]="node.id"
-          fInputConnectableSide="left"></div>
+          fInputConnectableSide="calculate_horizontal"></div>
 
         <!-- Right Connected Handle -->
         <div
           fNodeOutput
           fOutputConnectableSide="calculate_horizontal"
           [fOutputId]="node.id"
-          fOutputConnectableSide="right"></div>
+          fOutputConnectableSide="calculate_horizontal"></div>
       </div>
     }
 
     <!-- Edges -->
     @for (edge of elkEdges(); track edge.id) {
       <f-connection
-        fBehavior="fixed_center"
+        fBehavior="fixed"
         fType="segment"
         [fConnectionId]="edge.id"
         [fOutputId]="edge.source"
@@ -76,7 +76,7 @@
         type="checkbox"
         id="enableGroups"
         [checked]="enableGroupsSignal()"
-        (change)="onEnableGroupsChange($event)">
+        (change)="onEnableGroupsChange($event)" />
     </div>
 
     <!-- Algorithm Selection -->
@@ -99,7 +99,9 @@
         id="direction"
         [value]="selectedDirection()"
         (change)="onDirectionChange($event)"
-        [disabled]="selectedAlgorithm() === 'force' || selectedAlgorithm() === 'stress'">
+        [disabled]="
+          selectedAlgorithm() === 'force' || selectedAlgorithm() === 'stress'
+        ">
         @for (option of directionOptions; track option.value) {
           <option [value]="option.value">{{ option.label }}</option>
         }
@@ -143,7 +145,7 @@
         min="20"
         max="200"
         [value]="nodeSpacing()"
-        (input)="onNodeSpacingChange($event)">
+        (input)="onNodeSpacingChange($event)" />
       <span class="value-display">{{ nodeSpacing() }}px</span>
     </div>
 
@@ -157,7 +159,7 @@
         max="200"
         [value]="layerSpacing()"
         (input)="onLayerSpacingChange($event)"
-        [disabled]="selectedAlgorithm() !== 'layered'">
+        [disabled]="selectedAlgorithm() !== 'layered'" />
       <span class="value-display">{{ layerSpacing() }}px</span>
     </div>
 
@@ -171,7 +173,7 @@
         max="150"
         [value]="groupPadding()"
         (input)="onGroupPaddingChange($event)"
-        [disabled]="!enableGroupsSignal()">
+        [disabled]="!enableGroupsSignal()" />
       <span class="value-display">{{ groupPadding() }}px</span>
     </div>
   </div>
