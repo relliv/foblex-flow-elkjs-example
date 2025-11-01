@@ -20,12 +20,13 @@ import { timer } from 'rxjs';
 import { faker } from '@faker-js/faker';
 import { IEdge, IGroup, INode } from './models/graph.interface';
 import { ElkLayoutService } from './services/elk-layout.service';
+import { LayoutControlsComponent, LayoutConfig } from './components/layout-controls/layout-controls.component';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
-  imports: [FFlowModule],
+  imports: [FFlowModule, LayoutControlsComponent],
 })
 export class AppComponent implements OnInit {
   // Dependency injection
@@ -53,60 +54,25 @@ export class AppComponent implements OnInit {
   public foblexEdges = signal<IEdge[]>([]);
 
   // Configuration
-  private enableGroups = true; // Set to false to disable groups
   private groupCount = 20; // Number of groups to create
 
-  // Layout direction
-  public selectedDirection = signal<'RIGHT' | 'DOWN' | 'LEFT' | 'UP'>('DOWN');
-  public directionOptions = [
-    { value: 'RIGHT', label: 'Left to Right' },
-    { value: 'DOWN', label: 'Top to Bottom' },
-    { value: 'LEFT', label: 'Right to Left' },
-    { value: 'UP', label: 'Bottom to Top' },
-  ] as const;
-
-  // Layout algorithm
-  public selectedAlgorithm = signal<'layered' | 'force' | 'stress' | 'mrtree'>(
-    'layered'
-  );
-  public algorithmOptions = [
-    { value: 'layered', label: 'Layered (Hierarchical)' },
-    { value: 'force', label: 'Force-Directed (Organic)' },
-    { value: 'stress', label: 'Stress (Minimized Edge Length)' },
-    { value: 'mrtree', label: 'Tree (MR-Tree)' },
-  ] as const;
-
-  // Edge routing
-  public selectedEdgeRouting = signal<'ORTHOGONAL' | 'POLYLINE' | 'SPLINES'>('ORTHOGONAL');
-  public edgeRoutingOptions = [
-    { value: 'ORTHOGONAL', label: 'Orthogonal (90° angles)' },
-    { value: 'POLYLINE', label: 'Polyline (straight segments)' },
-    { value: 'SPLINES', label: 'Splines (curved)' },
-  ] as const;
-
-  // Node placement strategy (for layered algorithm)
-  public selectedNodePlacement = signal<'NETWORK_SIMPLEX' | 'BRANDES_KOEPF' | 'LINEAR_SEGMENTS'>('NETWORK_SIMPLEX');
-  public nodePlacementOptions = [
-    { value: 'NETWORK_SIMPLEX', label: 'Network Simplex' },
-    { value: 'BRANDES_KOEPF', label: 'Brandes Koepf' },
-    { value: 'LINEAR_SEGMENTS', label: 'Linear Segments' },
-  ] as const;
-
-  // Node spacing
-  public nodeSpacing = signal<number>(80);
-  public layerSpacing = signal<number>(80);
-
-  // Group padding
-  public groupPadding = signal<number>(60);
-
-  // Enable/disable groups toggle
-  public enableGroupsSignal = signal<boolean>(this.enableGroups);
+  // Layout configuration
+  public layoutConfig = signal<LayoutConfig>({
+    enableGroups: true,
+    algorithm: 'layered',
+    direction: 'DOWN',
+    edgeRouting: 'ORTHOGONAL',
+    nodePlacement: 'NETWORK_SIMPLEX',
+    nodeSpacing: 80,
+    layerSpacing: 80,
+    groupPadding: 60,
+  });
 
   public ngOnInit(): void {
     // Always create some default root nodes at the beginning
     this.createRootNodes(10); // Create 10 default root-level nodes
 
-    if (this.enableGroupsSignal()) {
+    if (this.layoutConfig().enableGroups) {
       this.createGroups(this.groupCount);
     } else {
       // Create additional root-level nodes when groups are disabled
@@ -151,30 +117,31 @@ export class AppComponent implements OnInit {
    */
   public async elkLayout(): Promise<void> {
     try {
+      const config = this.layoutConfig();
       const layoutResult = await this.elkLayoutService.calculateLayout(
         {
           groups: this.foblexGroups(),
           nodes: this.foblexNodes(),
           edges: this.foblexEdges(),
-          enableGroups: this.enableGroupsSignal(),
+          enableGroups: config.enableGroups,
         },
         {
-          algorithm: this.selectedAlgorithm(),
-          direction: this.selectedDirection(),
-          edgeRouting: this.selectedEdgeRouting(),
-          nodePlacement: this.selectedNodePlacement(),
+          algorithm: config.algorithm,
+          direction: config.direction,
+          edgeRouting: config.edgeRouting,
+          nodePlacement: config.nodePlacement,
           spacing: {
-            nodeNode: this.nodeSpacing(),
-            nodeNodeBetweenLayers: this.layerSpacing(),
+            nodeNode: config.nodeSpacing,
+            nodeNodeBetweenLayers: config.layerSpacing,
             componentComponent: 100,
             edgeNode: 40,
             edgeEdge: 20,
           },
           groupPadding: {
-            top: this.groupPadding(),
-            right: this.groupPadding(),
-            bottom: this.groupPadding(),
-            left: this.groupPadding(),
+            top: config.groupPadding,
+            right: config.groupPadding,
+            bottom: config.groupPadding,
+            left: config.groupPadding,
           },
         }
       );
@@ -199,81 +166,19 @@ export class AppComponent implements OnInit {
   }
 
   /**
-   * Handles direction change from UI
+   * Handles configuration changes from layout controls
    */
-  public onDirectionChange(event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    const direction = target.value as 'RIGHT' | 'DOWN' | 'LEFT' | 'UP';
-    this.selectedDirection.set(direction);
+  public onConfigChange(changes: Partial<LayoutConfig>): void {
+    this.layoutConfig.update(config => ({ ...config, ...changes }));
     this.elkLayout();
   }
 
   /**
-   * Handles algorithm change from UI
+   * Handles regenerate graph request (when groups toggle changes)
    */
-  public onAlgorithmChange(event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    const algorithm = target.value as 'layered' | 'force' | 'stress' | 'mrtree';
-    this.selectedAlgorithm.set(algorithm);
-    this.elkLayout();
-  }
-
-  /**
-   * Handles edge routing change from UI
-   */
-  public onEdgeRoutingChange(event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    const routing = target.value as 'ORTHOGONAL' | 'POLYLINE' | 'SPLINES';
-    this.selectedEdgeRouting.set(routing);
-    this.elkLayout();
-  }
-
-  /**
-   * Handles node placement change from UI
-   */
-  public onNodePlacementChange(event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    const placement = target.value as 'NETWORK_SIMPLEX' | 'BRANDES_KOEPF' | 'LINEAR_SEGMENTS';
-    this.selectedNodePlacement.set(placement);
-    this.elkLayout();
-  }
-
-  /**
-   * Handles node spacing change from UI
-   */
-  public onNodeSpacingChange(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    const spacing = parseInt(target.value, 10);
-    this.nodeSpacing.set(spacing);
-    this.elkLayout();
-  }
-
-  /**
-   * Handles layer spacing change from UI
-   */
-  public onLayerSpacingChange(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    const spacing = parseInt(target.value, 10);
-    this.layerSpacing.set(spacing);
-    this.elkLayout();
-  }
-
-  /**
-   * Handles group padding change from UI
-   */
-  public onGroupPaddingChange(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    const padding = parseInt(target.value, 10);
-    this.groupPadding.set(padding);
-    this.elkLayout();
-  }
-
-  /**
-   * Handles enable groups toggle from UI
-   */
-  public onEnableGroupsChange(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    this.enableGroupsSignal.set(target.checked);
+  public onRegenerateGraph(enableGroups: boolean): void {
+    // Update config
+    this.layoutConfig.update(config => ({ ...config, enableGroups }));
 
     // Re-create the graph structure
     this.foblexGroups.set([]);
@@ -283,7 +188,7 @@ export class AppComponent implements OnInit {
     // Always create some default root nodes
     this.createRootNodes(10);
 
-    if (target.checked) {
+    if (enableGroups) {
       this.createGroups(this.groupCount);
     } else {
       // Create additional root-level nodes when groups are disabled
