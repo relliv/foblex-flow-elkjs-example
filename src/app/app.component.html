@@ -1,8 +1,8 @@
 <f-flow fDraggable (fLoaded)="onLoaded()">
   <!-- Background -->
   <f-background>
-    <!-- <f-circle-pattern /> -->
-    <!-- <f-rect-pattern/> -->
+    <f-circle-pattern />
+    <!-- <f-rect-pattern /> -->
   </f-background>
 
   <f-canvas
@@ -58,4 +58,8 @@
       </f-connection>
     }
   </f-canvas>
+
+  <div class="any-container-or-without-container">
+    <f-minimap [fMinSize]="2000"></f-minimap>
+  </div>
 </f-flow>
