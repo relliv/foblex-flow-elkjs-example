@@ -6,8 +6,7 @@
     "start": "ng serve --port 2000",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test",
-    "serve:ssr:foblex-flow-elkjs-example": "node dist/foblex-flow-elkjs-example/server/server.mjs"
+    "test": "ng test"
   },
   "private": true,
   "dependencies": {
