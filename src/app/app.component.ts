@@ -12,7 +12,6 @@ import {
   FCanvasComponent,
   FFlowModule,
   FGroupDirective,
-  FNodeBase,
   FNodeDirective,
 } from '@foblex/flow';
 import { PointExtensions } from '@foblex/2d';
@@ -24,9 +23,9 @@ import { ElkLayoutService } from './services/elk-layout.service';
 
 @Component({
   selector: 'app-root',
-  imports: [FFlowModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
+  imports: [FFlowModule],
 })
 export class AppComponent implements OnInit {
   // Dependency injection
@@ -79,18 +78,8 @@ export class AppComponent implements OnInit {
 
   // #region Foblex Events
 
-  private isLoaded = false;
-
   public onLoaded(): void {
-    if (this.isLoaded) {
-      return;
-    }
-
-    this.isLoaded = true;
-
-    timer(1000).subscribe(() => {
-      this.elkLayout();
-    });
+    this.elkLayout();
   }
 
   public onCanvasChange(event: any): void {
