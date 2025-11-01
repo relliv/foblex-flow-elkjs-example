@@ -10,6 +10,8 @@ import {
   EFResizeHandleType,
   FCanvasComponent,
   FFlowModule,
+  FGroupDirective,
+  FNodeBase,
   FNodeDirective,
 } from '@foblex/flow';
 import { IPoint, ISize, PointExtensions } from '@foblex/2d';
@@ -50,6 +52,9 @@ interface IEdge {
 export class AppComponent implements OnInit {
   @ViewChild(FCanvasComponent, { static: true })
   public fCanvas!: FCanvasComponent;
+
+  @ViewChildren(FGroupDirective)
+  public fGroup!: QueryList<FGroupDirective>;
 
   @ViewChildren(FNodeDirective)
   public fNodes!: QueryList<FNodeDirective>;
@@ -216,17 +221,30 @@ export class AppComponent implements OnInit {
         this.elkNodes.set(allNodes);
 
         timer(2000).subscribe(() => {
-          this.elkNodes.update(nodes => [...nodes]);
-
-          this.fNodes.forEach(node => {
-            // Force position update by accessing the internal position property
-            const pos = typeof node.position === 'function'
-              ? node.position()
-              : node.position;
-            if (pos) {
-              node._position = { x: pos.x, y: pos.y };
-            }
+          // Force update groups
+          this.fGroup.forEach(group => {
+            console.log('Group position:', group._position);
+            group._position = {
+              x: group.position().x,
+              y: group.position().y,
+            };
+            group.redraw();
+            group.refresh();
           });
+
+          // Force update nodes
+          this.fNodes.forEach(node => {
+            console.log('Node position:', node._position);
+            node._position = {
+              x: node.position().x,
+              y: node.position().y,
+            };
+            node.redraw();
+            node.refresh();
+          });
+
+          // Redraw canvas
+          this.fCanvas.redraw();
         });
 
         this.elkEdges.set(
