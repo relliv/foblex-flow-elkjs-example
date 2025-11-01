@@ -113,77 +113,79 @@ export class AppComponent implements OnInit {
 
   public elkLayout(): void {
     // Build hierarchical structure for ELK.js (only if groups enabled)
-    const groups = this.enableGroups ? this.foblexGroups().map(group => {
-      const children = this.foblexNodes()
-        .filter(node => node.parentId === group.id)
-        .map(node => ({
-          id: node.id,
-          width: node.size.width,
-          height: node.size.height,
-          type: 'node',
-        }));
+    const groups = this.enableGroups
+      ? this.foblexGroups().map(group => {
+          const children = this.foblexNodes()
+            .filter(node => node.parentId === group.id)
+            .map(node => ({
+              id: node.id,
+              width: node.size.width,
+              height: node.size.height,
+              type: 'node',
+            }));
 
-      return {
-        id: group.id,
-        type: 'group',
-        layoutOptions: {
-          // Core algorithm
-          'elk.algorithm': 'layered',
-          'elk.direction': 'RIGHT',
+          return {
+            id: group.id,
+            type: 'group',
+            layoutOptions: {
+              // Core algorithm
+              'elk.algorithm': 'layered',
+              'elk.direction': 'RIGHT',
 
-          // Padding
-          'elk.padding': '[top=50,left=50,bottom=50,right=50]',
+              // Padding
+              'elk.padding': '[top=50,left=50,bottom=50,right=50]',
 
-          // Node spacing
-          'elk.spacing.nodeNode': '50',
-          'elk.layered.spacing.nodeNodeBetweenLayers': '50',
-          'elk.spacing.componentComponent': '70',
+              // Node spacing
+              'elk.spacing.nodeNode': '50',
+              'elk.layered.spacing.nodeNodeBetweenLayers': '50',
+              'elk.spacing.componentComponent': '70',
 
-          // Node sizing
-          'elk.nodeSize.constraints': 'NODE_LABELS MINIMUM_SIZE',
+              // Node sizing
+              'elk.nodeSize.constraints': 'NODE_LABELS MINIMUM_SIZE',
 
-          // Layered algorithm specific options
-          'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
-          'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
-          'elk.layered.cycleBreaking.strategy': 'GREEDY',
-          'elk.layered.layering.strategy': 'NETWORK_SIMPLEX',
+              // Layered algorithm specific options
+              'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
+              'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
+              'elk.layered.cycleBreaking.strategy': 'GREEDY',
+              'elk.layered.layering.strategy': 'NETWORK_SIMPLEX',
 
-          // Edge routing
-          'elk.edgeRouting': 'ORTHOGONAL',
-          'elk.layered.edgeRouting.selfLoopPlacement': 'NORTH_STACKED',
+              // Edge routing
+              'elk.edgeRouting': 'ORTHOGONAL',
+              'elk.layered.edgeRouting.selfLoopPlacement': 'NORTH_STACKED',
 
-          // Port constraints
-          'elk.portConstraints': 'FIXED_SIDE',
+              // Port constraints
+              'elk.portConstraints': 'FIXED_SIDE',
 
-          // Hierarchy handling
-          'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
+              // Hierarchy handling
+              'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
 
-          // Consider model order for better stability
-          'elk.considerModelOrder.strategy': 'NODES_AND_EDGES',
-        },
-        // Nest child nodes inside their parent groups
-        children: children,
-        // Add edges between nodes within this group
-        edges: this.foblexEdges()
-          .filter(edge => {
-            const sourceNode = this.foblexNodes().find(
-              n => n.id === edge.source
-            );
-            const targetNode = this.foblexNodes().find(
-              n => n.id === edge.target
-            );
-            return (
-              sourceNode?.parentId === group.id &&
-              targetNode?.parentId === group.id
-            );
-          })
-          .map(edge => ({
-            id: edge.id,
-            sources: [edge.source],
-            targets: [edge.target],
-          })),
-      };
-    }) : [];
+              // Consider model order for better stability
+              'elk.considerModelOrder.strategy': 'NODES_AND_EDGES',
+            },
+            // Nest child nodes inside their parent groups
+            children: children,
+            // Add edges between nodes within this group
+            edges: this.foblexEdges()
+              .filter(edge => {
+                const sourceNode = this.foblexNodes().find(
+                  n => n.id === edge.source
+                );
+                const targetNode = this.foblexNodes().find(
+                  n => n.id === edge.target
+                );
+                return (
+                  sourceNode?.parentId === group.id &&
+                  targetNode?.parentId === group.id
+                );
+              })
+              .map(edge => ({
+                id: edge.id,
+                sources: [edge.source],
+                targets: [edge.target],
+              })),
+          };
+        })
+      : [];
 
     // Root-level nodes (no parent)
     const rootNodes = this.foblexNodes()
@@ -196,26 +198,31 @@ export class AppComponent implements OnInit {
       }));
 
     // Root-level edges
-    const rootEdges = this.enableGroups ? this.foblexEdges()
-      .filter(edge => {
-        const sourceNode = this.foblexNodes().find(n => n.id === edge.source);
-        const targetNode = this.foblexNodes().find(n => n.id === edge.target);
-        // Include edge if nodes are in different groups or at root level
-        return (
-          sourceNode?.parentId !== targetNode?.parentId ||
-          (!sourceNode?.parentId && !targetNode?.parentId)
-        );
-      })
-      .map(edge => ({
-        id: edge.id,
-        sources: [edge.source],
-        targets: [edge.target],
-      }))
-    : this.foblexEdges().map(edge => ({
-        id: edge.id,
-        sources: [edge.source],
-        targets: [edge.target],
-      }));
+    const rootEdges = this.enableGroups
+      ? this.foblexEdges()
+          .filter(edge => {
+            const sourceNode = this.foblexNodes().find(
+              n => n.id === edge.source
+            );
+            const targetNode = this.foblexNodes().find(
+              n => n.id === edge.target
+            );
+            // Include edge if nodes are in different groups or at root level
+            return (
+              sourceNode?.parentId !== targetNode?.parentId ||
+              (!sourceNode?.parentId && !targetNode?.parentId)
+            );
+          })
+          .map(edge => ({
+            id: edge.id,
+            sources: [edge.source],
+            targets: [edge.target],
+          }))
+      : this.foblexEdges().map(edge => ({
+          id: edge.id,
+          sources: [edge.source],
+          targets: [edge.target],
+        }));
 
     const graph = {
       id: 'root',
@@ -261,17 +268,14 @@ export class AppComponent implements OnInit {
       edges: rootEdges,
     };
 
-    console.log('Input graph to ELK:', JSON.stringify(graph, null, 2));
-
     elk
       .layout(graph)
       .then(result => {
-        console.log('ELK Result:', JSON.stringify(result, null, 2));
         // Extract groups from result (only if groups enabled)
         const groups = this.enableGroups
-          ? ((result?.children?.filter(
+          ? (result?.children?.filter(
               (node: any) => node.type === 'group'
-            ) as any) || [])
+            ) as any) || []
           : [];
 
         if (this.enableGroups) {
@@ -337,22 +341,6 @@ export class AppComponent implements OnInit {
             source: edge.sources[0],
             target: edge.targets[0],
           })) as IEdge[]
-        );
-
-        console.log('=== Final Data ===');
-        console.log('ELK Groups:', this.elkGroups());
-        console.log('ELK Nodes:', this.elkNodes());
-        console.log('ELK Edges:', this.elkEdges());
-        console.log(
-          'Sample nodes with parent (absolute positions):',
-          this.elkNodes()
-            .filter(n => n.parentId)
-            .slice(0, 3)
-            .map(n => ({
-              id: n.id,
-              parentId: n.parentId,
-              position: { x: n.position?.x, y: n.position?.y },
-            }))
         );
 
         timer(250).subscribe(() => {
