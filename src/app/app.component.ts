@@ -76,11 +76,38 @@ export class AppComponent implements OnInit {
     { value: 'mrtree', label: 'Tree (MR-Tree)' },
   ] as const;
 
+  // Edge routing
+  public selectedEdgeRouting = signal<'ORTHOGONAL' | 'POLYLINE' | 'SPLINES'>('ORTHOGONAL');
+  public edgeRoutingOptions = [
+    { value: 'ORTHOGONAL', label: 'Orthogonal (90° angles)' },
+    { value: 'POLYLINE', label: 'Polyline (straight segments)' },
+    { value: 'SPLINES', label: 'Splines (curved)' },
+  ] as const;
+
+  // Node placement strategy (for layered algorithm)
+  public selectedNodePlacement = signal<'NETWORK_SIMPLEX' | 'SIMPLE' | 'INTERACTIVE' | 'LINEAR_SEGMENTS'>('NETWORK_SIMPLEX');
+  public nodePlacementOptions = [
+    { value: 'NETWORK_SIMPLEX', label: 'Network Simplex' },
+    { value: 'SIMPLE', label: 'Simple' },
+    { value: 'INTERACTIVE', label: 'Interactive' },
+    { value: 'LINEAR_SEGMENTS', label: 'Linear Segments' },
+  ] as const;
+
+  // Node spacing
+  public nodeSpacing = signal<number>(80);
+  public layerSpacing = signal<number>(80);
+
+  // Group padding
+  public groupPadding = signal<number>(60);
+
+  // Enable/disable groups toggle
+  public enableGroupsSignal = signal<boolean>(this.enableGroups);
+
   public ngOnInit(): void {
     // Always create some default root nodes at the beginning
     this.createRootNodes(10); // Create 10 default root-level nodes
 
-    if (this.enableGroups) {
+    if (this.enableGroupsSignal()) {
       this.createGroups(this.groupCount);
     } else {
       // Create additional root-level nodes when groups are disabled
@@ -130,11 +157,26 @@ export class AppComponent implements OnInit {
           groups: this.foblexGroups(),
           nodes: this.foblexNodes(),
           edges: this.foblexEdges(),
-          enableGroups: this.enableGroups,
+          enableGroups: this.enableGroupsSignal(),
         },
         {
           algorithm: this.selectedAlgorithm(),
           direction: this.selectedDirection(),
+          edgeRouting: this.selectedEdgeRouting(),
+          nodePlacement: this.selectedNodePlacement(),
+          spacing: {
+            nodeNode: this.nodeSpacing(),
+            nodeNodeBetweenLayers: this.layerSpacing(),
+            componentComponent: 100,
+            edgeNode: 40,
+            edgeEdge: 20,
+          },
+          groupPadding: {
+            top: this.groupPadding(),
+            right: this.groupPadding(),
+            bottom: this.groupPadding(),
+            left: this.groupPadding(),
+          },
         }
       );
 
@@ -174,6 +216,88 @@ export class AppComponent implements OnInit {
     const target = event.target as HTMLSelectElement;
     const algorithm = target.value as 'layered' | 'force' | 'stress' | 'mrtree';
     this.selectedAlgorithm.set(algorithm);
+    this.elkLayout();
+  }
+
+  /**
+   * Handles edge routing change from UI
+   */
+  public onEdgeRoutingChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const routing = target.value as 'ORTHOGONAL' | 'POLYLINE' | 'SPLINES';
+    this.selectedEdgeRouting.set(routing);
+    this.elkLayout();
+  }
+
+  /**
+   * Handles node placement change from UI
+   */
+  public onNodePlacementChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const placement = target.value as 'NETWORK_SIMPLEX' | 'SIMPLE' | 'INTERACTIVE' | 'LINEAR_SEGMENTS';
+    this.selectedNodePlacement.set(placement);
+    this.elkLayout();
+  }
+
+  /**
+   * Handles node spacing change from UI
+   */
+  public onNodeSpacingChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const spacing = parseInt(target.value, 10);
+    this.nodeSpacing.set(spacing);
+    this.elkLayout();
+  }
+
+  /**
+   * Handles layer spacing change from UI
+   */
+  public onLayerSpacingChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const spacing = parseInt(target.value, 10);
+    this.layerSpacing.set(spacing);
+    this.elkLayout();
+  }
+
+  /**
+   * Handles group padding change from UI
+   */
+  public onGroupPaddingChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const padding = parseInt(target.value, 10);
+    this.groupPadding.set(padding);
+    this.elkLayout();
+  }
+
+  /**
+   * Handles enable groups toggle from UI
+   */
+  public onEnableGroupsChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.enableGroupsSignal.set(target.checked);
+
+    // Re-create the graph structure
+    this.foblexGroups.set([]);
+    this.foblexNodes.set([]);
+    this.foblexEdges.set([]);
+
+    // Always create some default root nodes
+    this.createRootNodes(10);
+
+    if (target.checked) {
+      this.createGroups(this.groupCount);
+    } else {
+      // Create additional root-level nodes when groups are disabled
+      this.createRootNodes(40);
+    }
+
+    this.foblexEdges.set(
+      this.createRandomWiredEdges(
+        this.foblexNodes(),
+        this.foblexNodes().length / 3
+      )
+    );
+
     this.elkLayout();
   }
 

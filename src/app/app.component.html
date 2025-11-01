@@ -69,6 +69,17 @@
   </div>
 
   <div class="layout-controls">
+    <!-- Enable Groups Toggle -->
+    <div class="control-group">
+      <label for="enableGroups">Enable Groups:</label>
+      <input
+        type="checkbox"
+        id="enableGroups"
+        [checked]="enableGroupsSignal()"
+        (change)="onEnableGroupsChange($event)">
+    </div>
+
+    <!-- Algorithm Selection -->
     <div class="control-group">
       <label for="algorithm">Layout Algorithm:</label>
       <select
@@ -81,6 +92,7 @@
       </select>
     </div>
 
+    <!-- Direction Selection -->
     <div class="control-group">
       <label for="direction">Direction:</label>
       <select
@@ -92,6 +104,75 @@
           <option [value]="option.value">{{ option.label }}</option>
         }
       </select>
+    </div>
+
+    <!-- Edge Routing -->
+    <div class="control-group">
+      <label for="edgeRouting">Edge Routing:</label>
+      <select
+        id="edgeRouting"
+        [value]="selectedEdgeRouting()"
+        (change)="onEdgeRoutingChange($event)"
+        [disabled]="selectedAlgorithm() !== 'layered'">
+        @for (option of edgeRoutingOptions; track option.value) {
+          <option [value]="option.value">{{ option.label }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Node Placement Strategy -->
+    <div class="control-group">
+      <label for="nodePlacement">Node Placement:</label>
+      <select
+        id="nodePlacement"
+        [value]="selectedNodePlacement()"
+        (change)="onNodePlacementChange($event)"
+        [disabled]="selectedAlgorithm() !== 'layered'">
+        @for (option of nodePlacementOptions; track option.value) {
+          <option [value]="option.value">{{ option.label }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Node Spacing -->
+    <div class="control-group">
+      <label for="nodeSpacing">Node Spacing:</label>
+      <input
+        type="range"
+        id="nodeSpacing"
+        min="20"
+        max="200"
+        [value]="nodeSpacing()"
+        (input)="onNodeSpacingChange($event)">
+      <span class="value-display">{{ nodeSpacing() }}px</span>
+    </div>
+
+    <!-- Layer Spacing -->
+    <div class="control-group">
+      <label for="layerSpacing">Layer Spacing:</label>
+      <input
+        type="range"
+        id="layerSpacing"
+        min="20"
+        max="200"
+        [value]="layerSpacing()"
+        (input)="onLayerSpacingChange($event)"
+        [disabled]="selectedAlgorithm() !== 'layered'">
+      <span class="value-display">{{ layerSpacing() }}px</span>
+    </div>
+
+    <!-- Group Padding -->
+    <div class="control-group">
+      <label for="groupPadding">Group Padding:</label>
+      <input
+        type="range"
+        id="groupPadding"
+        min="10"
+        max="150"
+        [value]="groupPadding()"
+        (input)="onGroupPaddingChange($event)"
+        [disabled]="!enableGroupsSignal()">
+      <span class="value-display">{{ groupPadding() }}px</span>
     </div>
   </div>
 </f-flow>
