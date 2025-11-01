@@ -85,11 +85,10 @@ export class AppComponent implements OnInit {
   ] as const;
 
   // Node placement strategy (for layered algorithm)
-  public selectedNodePlacement = signal<'NETWORK_SIMPLEX' | 'SIMPLE' | 'INTERACTIVE' | 'LINEAR_SEGMENTS'>('NETWORK_SIMPLEX');
+  public selectedNodePlacement = signal<'NETWORK_SIMPLEX' | 'BRANDES_KOEPF' | 'LINEAR_SEGMENTS'>('NETWORK_SIMPLEX');
   public nodePlacementOptions = [
     { value: 'NETWORK_SIMPLEX', label: 'Network Simplex' },
-    { value: 'SIMPLE', label: 'Simple' },
-    { value: 'INTERACTIVE', label: 'Interactive' },
+    { value: 'BRANDES_KOEPF', label: 'Brandes Koepf' },
     { value: 'LINEAR_SEGMENTS', label: 'Linear Segments' },
   ] as const;
 
@@ -234,7 +233,7 @@ export class AppComponent implements OnInit {
    */
   public onNodePlacementChange(event: Event): void {
     const target = event.target as HTMLSelectElement;
-    const placement = target.value as 'NETWORK_SIMPLEX' | 'SIMPLE' | 'INTERACTIVE' | 'LINEAR_SEGMENTS';
+    const placement = target.value as 'NETWORK_SIMPLEX' | 'BRANDES_KOEPF' | 'LINEAR_SEGMENTS';
     this.selectedNodePlacement.set(placement);
     this.elkLayout();
   }
