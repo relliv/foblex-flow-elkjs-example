@@ -5,7 +5,12 @@
     <!-- <f-rect-pattern/> -->
   </f-background>
 
-  <f-canvas [fZoom]="true" [fZoomStep]="0.045">
+  <f-canvas
+    [fZoom]="true"
+    [fZoomStep]="0.4"
+    [fZoomMaximum]="1.5"
+    [fZoomMinimum]="0.1"
+    (fCanvasChange)="onCanvasChange($event)">
     <!-- Groups -->
     @for (group of elkGroups(); track $index) {
       <div

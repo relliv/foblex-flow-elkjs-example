@@ -106,12 +106,65 @@ The template (`src/app/app.component.html`) uses nested @for loops:
 
 ### Foblex Flow Integration
 
-- **Canvas**: `<f-canvas>` with zoom support (step: 0.045)
+- **Canvas**: `<f-canvas>` with zoom support
+  - Zoom step: 0.4 (faster zooming)
+  - Maximum zoom: 1.5x (150%)
+  - Minimum zoom: 0.1x (10%)
+  - Canvas change events for zoom tracking
 - **Groups**: `fGroup` directive with drag handles
 - **Nodes**: `fNode` directive with position/size binding
 - **Handles**: `fNodeInput` (left) and `fNodeOutput` (right) for connections
 - **Connections**: `f-connection` with segment type and fixed center behavior
 - **Background**: Circle pattern overlay
+
+### Dynamic Stroke Width Compensation
+
+**Problem**: SVG path strokes become invisible when zooming out due to parent element scaling via `transform: matrix()`.
+
+**Solution**: The application implements dynamic stroke width compensation that inversely scales with zoom level to maintain consistent visual appearance.
+
+#### Implementation Details
+
+1. **Canvas Change Event Handler**:
+   ```typescript
+   public onCanvasChange(event: any): void {
+     const scale = event.scale || 1;
+     this.currentZoomScale = scale;
+     this.updateStrokeCompensation();
+   }
+   ```
+
+2. **Stroke Compensation Logic**:
+   ```typescript
+   private updateStrokeCompensation(): void {
+     // Calculate inversely proportional width
+     const compensatedWidth = this.baseStrokeWidth / this.currentZoomScale;
+
+     // Apply to all connection paths
+     document.querySelectorAll('.f-connection-path').forEach((path: Element) => {
+       (path as HTMLElement).style.strokeWidth = `${compensatedWidth}px`;
+     });
+   }
+   ```
+
+3. **Configuration**:
+   - Base stroke width: 2px (defined in `baseStrokeWidth`)
+   - Current zoom scale: Tracked in `currentZoomScale` signal
+   - Target elements: All `.f-connection-path` SVG elements
+
+#### How It Works
+
+- When zoom scale = 1.0 (100%), stroke width = 2px
+- When zoom scale = 0.5 (50% - zoomed out), stroke width = 4px (compensated)
+- When zoom scale = 1.5 (150% - zoomed in), stroke width = 1.33px (compensated)
+
+This ensures connection paths remain visible and consistent regardless of zoom level.
+
+#### Auto-Update Mechanism
+
+- Triggered automatically via `(fCanvasChange)` event on every zoom/pan operation
+- Applied after initial layout completion (250ms + 100ms delay)
+- No manual MutationObserver needed - uses Angular event binding
 
 ### ELK.js Configuration
 

@@ -75,6 +75,10 @@ export class AppComponent implements OnInit {
   private enableGroups = true; // Set to false to disable groups
   private groupCount = 20; // Number of groups to create
 
+  // Zoom and stroke compensation
+  private baseStrokeWidth = 2; // Base stroke width in pixels
+  private currentZoomScale = 1; // Current zoom scale
+
   public ngOnInit(): void {
     if (this.enableGroups) {
       this.createGroups(this.groupCount);
@@ -104,6 +108,24 @@ export class AppComponent implements OnInit {
 
     timer(1000).subscribe(() => {
       this.elkLayout();
+    });
+  }
+
+  public onCanvasChange(event: any): void {
+    // Extract zoom scale from the canvas transform
+    const scale = event.scale || 1;
+    this.currentZoomScale = scale;
+
+    // Apply stroke width compensation
+    this.updateStrokeCompensation();
+  }
+
+  private updateStrokeCompensation(): void {
+    // Apply to all connection paths (SVG elements)
+    const connectionPaths = document.querySelectorAll('.f-connection-path');
+    connectionPaths.forEach((path: Element) => {
+      // Use setAttribute for SVG elements to ensure proper rendering
+      (path as SVGPathElement).setAttribute('stroke-width', '2');
     });
   }
 
@@ -345,6 +367,11 @@ export class AppComponent implements OnInit {
 
         timer(250).subscribe(() => {
           this.fCanvas.fitToScreen(PointExtensions.initialize(100, 100), false);
+
+          // Apply initial stroke compensation after layout
+          timer(100).subscribe(() => {
+            this.updateStrokeCompensation();
+          });
         });
       })
       .catch(console.error);
