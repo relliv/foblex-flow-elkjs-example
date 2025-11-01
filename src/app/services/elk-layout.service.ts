@@ -65,7 +65,7 @@ export class ElkLayoutService {
 
     try {
       const result = await this.elk.layout(graph);
-      const output = this.extractLayoutResults(result, input.enableGroups);
+      const output = this.extractLayoutResults(result);
 
       // Debug logging for output
       if (input.enableGroups && layoutOptions.algorithm === 'layered') {
@@ -87,10 +87,7 @@ export class ElkLayoutService {
    * Builds the ELK.js graph structure from input data
    * @private
    */
-  private buildElkGraph(
-    input: ILayoutInput,
-    options: IElkLayoutOptions
-  ): any {
+  private buildElkGraph(input: ILayoutInput, options: IElkLayoutOptions): any {
     const { groups, nodes, edges, enableGroups } = input;
 
     // For layered algorithm with groups, use INCLUDE_CHILDREN for proper cross-hierarchical edges
@@ -373,16 +370,16 @@ export class ElkLayoutService {
    * Converts ELK's nested structure to flat arrays with absolute positions
    * @private
    */
-  private extractLayoutResults(
-    result: any,
-    enableGroups: boolean
-  ): ILayoutOutput {
+  private extractLayoutResults(result: any): ILayoutOutput {
     const groups: IGroup[] = [];
     const nodes: INode[] = [];
     const edges: IEdge[] = [];
 
     // Helper function to recursively extract nodes from groups
-    const extractNodesFromGroup = (group: any, parentOffset = { x: 0, y: 0 }) => {
+    const extractNodesFromGroup = (
+      group: any,
+      parentOffset = { x: 0, y: 0 }
+    ) => {
       const groupX = parentOffset.x + (group.x || 0);
       const groupY = parentOffset.y + (group.y || 0);
 

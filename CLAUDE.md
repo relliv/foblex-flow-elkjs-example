@@ -18,6 +18,7 @@ This is a proof of concept Angular application demonstrating the integration of 
 ## Common Commands
 
 ### Development
+
 ```bash
 pnpm start              # Start dev server on port 2000
 pnpm run build          # Production build
@@ -26,6 +27,7 @@ pnpm run test           # Run tests with Karma
 ```
 
 ### Server-Side Rendering
+
 ```bash
 pnpm run build          # Build first
 pnpm run serve:ssr:foblex-flow-elkjs-example  # Run SSR server
@@ -76,7 +78,7 @@ The application follows this data flow pattern:
 
 ### File Structure
 
-```
+```txt
 src/app/
 ├── models/
 │   └── graph.interface.ts       # Type definitions for graph elements
@@ -151,6 +153,7 @@ interface IElkLayoutOptions {
 ### Service Layer
 
 **ElkLayoutService** (`src/app/services/elk-layout.service.ts`):
+
 - Injectable service with `providedIn: 'root'`
 - Encapsulates all ELK.js layout logic
 - **Public API**:
@@ -170,6 +173,7 @@ interface IElkLayoutOptions {
 ### Component Structure
 
 **AppComponent** (`src/app/app.component.ts`):
+
 - Presentation-focused component using Angular signals
 - **Dependency Injection**:
   - Injects `ElkLayoutService` using `inject()` function
@@ -190,6 +194,7 @@ interface IElkLayoutOptions {
 ### Template Architecture
 
 The template (`src/app/app.component.html`) uses nested @for loops:
+
 1. Iterates over `elkGroups` to render group containers
 2. Inside each group, iterates `elkNodes` filtering by `parentId`
 3. Separately renders root-level nodes (where `parentId === null`)
@@ -217,6 +222,7 @@ The template (`src/app/app.component.html`) uses nested @for loops:
 #### Implementation Details
 
 1. **Canvas Change Event Handler**:
+
    ```typescript
    public onCanvasChange(event: any): void {
      const scale = event.scale || 1;
@@ -226,6 +232,7 @@ The template (`src/app/app.component.html`) uses nested @for loops:
    ```
 
 2. **Stroke Compensation Logic**:
+
    ```typescript
    private updateStrokeCompensation(): void {
      // Calculate inversely proportional width
@@ -260,13 +267,16 @@ This ensures connection paths remain visible and consistent regardless of zoom l
 ### ELK.js Configuration
 
 #### Core Settings
+
 - **Algorithm**: `'layered'` - Hierarchical layout for directed graphs
 - **Direction**: `'RIGHT'` - Left-to-right flow
 - **Graph structure**: Hierarchical (child nodes nested inside parent groups)
 - **Hierarchy handling**: `'INCLUDE_CHILDREN'` - Properly handle nested structures
 
 #### Spacing Configuration
+
 **Root Level:**
+
 - Node-to-node: 80px
 - Between layers: 80px
 - Between components: 100px
@@ -274,24 +284,29 @@ This ensures connection paths remain visible and consistent regardless of zoom l
 - Edge-to-edge: 20px
 
 **Within Groups:**
+
 - Node-to-node: 50px
 - Between layers: 50px
 - Between components: 70px
 - Padding: 50px on all sides
 
 #### Layout Strategies
+
 **Node Placement:**
+
 - Strategy: `'NETWORK_SIMPLEX'` - Optimal node positioning minimizing edge length
 - Crossing minimization: `'LAYER_SWEEP'` - Reduces edge crossings
 - Cycle breaking: `'GREEDY'` - Handles cyclic dependencies
 - Layering: `'NETWORK_SIMPLEX'` - Optimal layer assignment
 
 #### Edge Routing
+
 - Type: `'ORTHOGONAL'` - Right-angled edges for cleaner appearance
 - Self-loop placement: `'NORTH_STACKED'` - Self-referencing edges on top
 - Port constraints: `'FIXED_SIDE'` - Consistent connection sides
 
 #### Advanced Features
+
 - **Separate components**: Connected components are laid out separately
 - **Model order**: Considers node/edge order for stability (`'NODES_AND_EDGES'`)
 - **Interactive layout**: Optimized for incremental updates
@@ -316,6 +331,7 @@ this.elkNodes.update(nodes => [...nodes, newNode]);
 ```
 
 **Template usage**:
+
 ```html
 @for (group of elkGroups(); track $index) {
   <!-- group is the unwrapped value -->
@@ -323,6 +339,7 @@ this.elkNodes.update(nodes => [...nodes, newNode]);
 ```
 
 Benefits:
+
 - Fine-grained reactivity without Zone.js overhead
 - Automatic change detection when signals update
 - Better performance for large datasets
@@ -413,7 +430,7 @@ edgeRouting: 'POLYLINE'    // Straight segments
 edgeRouting: 'SPLINES'     // Curved edges
 ```
 
-#### Spacing Configuration
+#### Spacing
 
 ```typescript
 spacing: {
@@ -449,12 +466,14 @@ private groupCount = 20;      // Number of groups when enabled
 ```
 
 **With Groups Enabled** (`enableGroups = true`):
+
 - Creates specified number of groups
 - Each group gets 3-10 child nodes
 - Additional root-level nodes created
 - Hierarchical layout with group nesting
 
 **With Groups Disabled** (`enableGroups = false`):
+
 - Creates 50 root-level nodes only
 - No hierarchical nesting
 - Flat graph layout
