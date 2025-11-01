@@ -127,7 +127,7 @@ export class AppComponent implements OnInit {
         this.fCanvas.fitToScreen(PointExtensions.initialize(100, 100), false);
 
         // Apply initial stroke compensation after layout
-        timer(250).subscribe(() => {
+        timer(500).subscribe(() => {
           this.updateStrokeCompensation();
         });
       });

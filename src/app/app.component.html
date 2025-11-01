@@ -37,11 +37,16 @@
         Node {{ $index + 1 }}
 
         <!-- Left Connected Handle -->
-        <div fNodeInput [fInputId]="node.id" fInputConnectableSide="left"></div>
+        <div
+          fNodeInput
+          fInputConnectableSide="calculate_horizontal"
+          [fInputId]="node.id"
+          fInputConnectableSide="left"></div>
 
         <!-- Right Connected Handle -->
         <div
           fNodeOutput
+          fOutputConnectableSide="calculate_horizontal"
           [fOutputId]="node.id"
           fOutputConnectableSide="right"></div>
       </div>
