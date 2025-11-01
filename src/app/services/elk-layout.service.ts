@@ -95,11 +95,11 @@ export class ElkLayoutService {
       // Build groups with hierarchy handling
       const elkGroups = groups.map(group => {
         const groupChildren = nodes
-          .filter(n => n.parentId === group.id)
-          .map(n => ({
-            id: n.id,
-            width: n.size.width,
-            height: n.size.height,
+          .filter(node => node.parentId === group.id)
+          .map(node => ({
+            id: node.id,
+            width: node.size.width,
+            height: node.size.height,
           }));
 
         return {
