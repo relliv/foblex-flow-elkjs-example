@@ -2,6 +2,8 @@
 
 A sophisticated graph visualization application that combines **Foblex Flow** (Angular flow diagram library) with **ELK.js** (Eclipse Layout Kernel) for automatic graph layout. This example demonstrates how to create complex hierarchical diagrams with automatic layout algorithms.
 
+## [⚡ Live Demo](https://stackblitz.com/~/github.com/relliv/foblex-flow-elkjs-example)
+
 ![Preview](preview.png)
 
 ## 🚀 Features
