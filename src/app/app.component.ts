@@ -56,10 +56,6 @@ export class AppComponent implements OnInit {
   private enableGroups = true; // Set to false to disable groups
   private groupCount = 20; // Number of groups to create
 
-  // Zoom and stroke compensation
-  private baseStrokeWidth = 2; // Base stroke width in pixels
-  private currentZoomScale = 1; // Current zoom scale
-
   // Layout direction
   public selectedDirection = signal<'RIGHT' | 'DOWN' | 'LEFT' | 'UP'>('DOWN');
   public directionOptions = [
@@ -106,10 +102,6 @@ export class AppComponent implements OnInit {
   }
 
   public onCanvasChange(event: any): void {
-    // Extract zoom scale from the canvas transform
-    const scale = event.scale || 1;
-    this.currentZoomScale = scale;
-
     // Apply stroke width compensation
     this.updateStrokeCompensation();
   }
