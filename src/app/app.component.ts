@@ -117,14 +117,39 @@ export class AppComponent implements OnInit {
         id: group.id,
         type: 'group',
         layoutOptions: {
+          // Core algorithm
           'elk.algorithm': 'layered',
-          'elk.padding': '[top=50,left=50,bottom=50,right=50]',
           'elk.direction': 'RIGHT',
+
+          // Padding
+          'elk.padding': '[top=50,left=50,bottom=50,right=50]',
+
+          // Node spacing
           'elk.spacing.nodeNode': '50',
           'elk.layered.spacing.nodeNodeBetweenLayers': '50',
           'elk.spacing.componentComponent': '70',
-          // Let ELK calculate group size based on children
+
+          // Node sizing
           'elk.nodeSize.constraints': 'NODE_LABELS MINIMUM_SIZE',
+
+          // Layered algorithm specific options
+          'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
+          'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
+          'elk.layered.cycleBreaking.strategy': 'GREEDY',
+          'elk.layered.layering.strategy': 'NETWORK_SIMPLEX',
+
+          // Edge routing
+          'elk.edgeRouting': 'ORTHOGONAL',
+          'elk.layered.edgeRouting.selfLoopPlacement': 'NORTH_STACKED',
+
+          // Port constraints
+          'elk.portConstraints': 'FIXED_SIDE',
+
+          // Hierarchy handling
+          'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
+
+          // Consider model order for better stability
+          'elk.considerModelOrder.strategy': 'NODES_AND_EDGES',
         },
         // Nest child nodes inside their parent groups
         children: children,
@@ -180,11 +205,42 @@ export class AppComponent implements OnInit {
     const graph = {
       id: 'root',
       layoutOptions: {
+        // Core algorithm
         'elk.algorithm': 'layered',
         'elk.direction': 'RIGHT',
+
+        // Spacing
         'elk.spacing.nodeNode': '80',
         'elk.layered.spacing.nodeNodeBetweenLayers': '80',
         'elk.spacing.componentComponent': '100',
+        'elk.spacing.edgeNode': '40',
+        'elk.spacing.edgeEdge': '20',
+
+        // Layered algorithm options
+        'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
+        'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
+        'elk.layered.cycleBreaking.strategy': 'GREEDY',
+        'elk.layered.layering.strategy': 'NETWORK_SIMPLEX',
+        'elk.layered.thoroughness': '10',
+
+        // Edge routing
+        'elk.edgeRouting': 'ORTHOGONAL',
+        'elk.layered.edgeRouting.selfLoopPlacement': 'NORTH_STACKED',
+
+        // Separate connected components
+        'elk.separateConnectedComponents': 'true',
+
+        // Port constraints
+        'elk.portConstraints': 'FIXED_SIDE',
+
+        // Hierarchy handling
+        'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
+
+        // Consider model order
+        'elk.considerModelOrder.strategy': 'NODES_AND_EDGES',
+
+        // Interactive mode for better incremental layout
+        'elk.interactiveLayout': 'true',
       },
       children: [...groups, ...rootNodes],
       edges: rootEdges,

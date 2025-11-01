@@ -115,18 +115,44 @@ The template (`src/app/app.component.html`) uses nested @for loops:
 
 ### ELK.js Configuration
 
-- Algorithm: `'layered'` - Hierarchical layout for directed graphs
-- Node types: Distinguished as 'group' or 'node' for proper hierarchy
-- **Graph structure**: Hierarchical (child nodes nested inside parent groups, not flat with `parentId`)
-- Group sizing: Groups do not specify width/height, allowing ELK to calculate based on children
-- Padding: Groups have 50px padding on all sides for visual spacing
-- **Child positioning**: Node positions inside groups are relative to the group's origin
-- **Group sub-node layouting**: Each group has its own layout algorithm
-  - Groups run layered layout on their children
-  - Intra-group edges are kept within the group's edge list
-  - Inter-group edges are placed at the root level
-  - 50px spacing between nodes within groups
-  - 70px spacing between disconnected components within groups
+#### Core Settings
+- **Algorithm**: `'layered'` - Hierarchical layout for directed graphs
+- **Direction**: `'RIGHT'` - Left-to-right flow
+- **Graph structure**: Hierarchical (child nodes nested inside parent groups)
+- **Hierarchy handling**: `'INCLUDE_CHILDREN'` - Properly handle nested structures
+
+#### Spacing Configuration
+**Root Level:**
+- Node-to-node: 80px
+- Between layers: 80px
+- Between components: 100px
+- Edge-to-node: 40px
+- Edge-to-edge: 20px
+
+**Within Groups:**
+- Node-to-node: 50px
+- Between layers: 50px
+- Between components: 70px
+- Padding: 50px on all sides
+
+#### Layout Strategies
+**Node Placement:**
+- Strategy: `'NETWORK_SIMPLEX'` - Optimal node positioning minimizing edge length
+- Crossing minimization: `'LAYER_SWEEP'` - Reduces edge crossings
+- Cycle breaking: `'GREEDY'` - Handles cyclic dependencies
+- Layering: `'NETWORK_SIMPLEX'` - Optimal layer assignment
+
+#### Edge Routing
+- Type: `'ORTHOGONAL'` - Right-angled edges for cleaner appearance
+- Self-loop placement: `'NORTH_STACKED'` - Self-referencing edges on top
+- Port constraints: `'FIXED_SIDE'` - Consistent connection sides
+
+#### Advanced Features
+- **Separate components**: Connected components are laid out separately
+- **Model order**: Considers node/edge order for stability (`'NODES_AND_EDGES'`)
+- **Interactive layout**: Optimized for incremental updates
+- **Thoroughness**: Level 10 for high-quality layout (root level)
+- **Auto-sizing**: Groups calculate size based on children
 
 ## Development Patterns
 
@@ -158,14 +184,53 @@ Benefits:
 - Better performance for large datasets
 - Type-safe reactive state
 
-### Adding New Layout Options
+### Customizing ELK Layout Options
 
-To customize ELK layout behavior, modify the `layoutOptions` in `elkLayout()`:
+#### Changing Layout Direction
 ```typescript
-layoutOptions: {
-  'elk.algorithm': 'layered',
-  // Add additional ELK options here
-}
+'elk.direction': 'DOWN'  // Top-to-bottom (vertical)
+'elk.direction': 'RIGHT' // Left-to-right (horizontal, default)
+'elk.direction': 'UP'    // Bottom-to-top
+'elk.direction': 'LEFT'  // Right-to-left
+```
+
+#### Adjusting Spacing
+```typescript
+// Increase spacing between nodes
+'elk.spacing.nodeNode': '100',
+
+// Increase spacing between layers
+'elk.layered.spacing.nodeNodeBetweenLayers': '120',
+
+// Add more space around groups
+'elk.padding': '[top=80,left=80,bottom=80,right=80]',
+```
+
+#### Trying Different Algorithms
+```typescript
+'elk.algorithm': 'layered'  // Best for hierarchical/flow diagrams (default)
+'elk.algorithm': 'force'    // Force-directed layout
+'elk.algorithm': 'stress'   // Stress-based layout
+'elk.algorithm': 'mrtree'   // Tree layout
+```
+
+#### Changing Node Placement Strategy
+```typescript
+// For denser layouts
+'elk.layered.nodePlacement.strategy': 'BRANDES_KOEPF',
+
+// For straighter edges (default)
+'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
+
+// For simpler/faster layout
+'elk.layered.nodePlacement.strategy': 'LINEAR_SEGMENTS',
+```
+
+#### Edge Routing Options
+```typescript
+'elk.edgeRouting': 'ORTHOGONAL'  // Right angles (default)
+'elk.edgeRouting': 'POLYLINE'    // Straight segments
+'elk.edgeRouting': 'SPLINES'     // Curved edges
 ```
 
 ### Modifying Node/Group Generation
